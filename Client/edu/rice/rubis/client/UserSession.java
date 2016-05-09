@@ -630,12 +630,19 @@ public class UserSession extends Thread
       case 20 :
         // Store Comment in the database
         { // Generate a random comment and rating
-          String[] staticComment = {
+    String[] staticComment = { "This is a very bad comment. Stay away from this seller !!<p>",
+                               "This is a comment below average. I don&#39t recommend this user !!<p>",
+                               "This is a neutral comment. It is neither a good or a bad seller !!<p>",
+                               "This is a comment above average. You can trust this seller even if it is not the best deal !!<p>",
+                               "This is an excellent comment. You can make really great deals with this seller !!<p>" };
+
+    
+          /*String[] staticComment = {
               "This is a very bad comment. Stay away from this seller !!<br>",
               "This is a comment below average. I don't recommend this user !!<br>",
               "This is a neutral comment. It is neither a good or a bad seller !!<br>",
               "This is a comment above average. You can trust this seller even if it is not the best deal !!<br>",
-              "This is an excellent comment. You can make really great deals with this seller !!<br>"};
+              "This is an excellent comment. You can make really great deals with this seller !!<br>"};*/
           int[] staticCommentLength = {staticComment[0].length(),
               staticComment[1].length(), staticComment[2].length(),
               staticComment[3].length(), staticComment[4].length()};
@@ -679,7 +686,7 @@ public class UserSession extends Thread
           int duration;
           int quantity;
           int categoryId;
-          String staticDescription = "This incredible item is exactly what you need !<br>It has a lot of very nice features including "
+          /*String staticDescription = "This incredible item is exactly what you need !<br>It has a lot of very nice features including "
               + "a coffee option.<br>It comes with a free license for the free RUBiS software, that's really cool. But RUBiS even if it "
               + "is free, is <B>(C) Rice University/INRIA 2001</B>. It is really hard to write an interesting generic description for "
               + "automatically generated items, but who will really read this <br>You can also check some cool software available on "
@@ -690,7 +697,19 @@ public class UserSession extends Thread
               + "cOmpression, parallel Pull-based lru for Sci clusters !! Ok, that was a lot of fun but now it is starting to be quite late "
               + "and I'll have to go to bed very soon, so I think if you need more information, just go on <h1>http://sci-serv.inrialpes.fr</h1> "
               + "or you can even try http://www.cs.rice.edu and try to find where Emmanuel Cecchet or Julie Marguerite are and you will "
-              + "maybe get fresh news about all that !!<br>";
+              + "maybe get fresh news about all that !!<br>";*/
+        String staticDescription = "This incredible item is exactly what you need !<br>It has a lot of very nice features including "+
+          "a coffee option.<p>It comes with a free license for the free RUBiS software, that&#39s really cool. But RUBiS even if it "+
+          "is free, is <B>(C) Rice University/INRIA 2001</B>. It is really hard to write an interesting generic description for "+
+          "automatically generated items, but who will really read this ?<p>You can also check some cool software available on "+
+          "http://sci-serv.inrialpes.fr. There is a very cool DSM system called SciFS for SCI clusters, but you will need some "+
+          "SCI adapters to be able to run it ! Else you can still try CART, the amazing &#39Cluster Administration and Reservation "+
+          "Tool&#39. All those software are open source, so don&#39t hesitate ! If you have a SCI Cluster you can also try the Whoops! "+
+          "clustered web server. Actually Whoops! stands for something ! Yes, it is a Web cache with tcp Handoff, On the fly "+
+          "cOmpression, parallel Pull-based lru for Sci clusters !! Ok, that was a lot of fun but now it is starting to be quite late "+
+          "and I&#39ll have to go to bed very soon, so I think if you need more information, just go on <h1>http://sci-serv.inrialpes.fr</h1> "+
+          "or you can even try http://www.cs.rice.edu and try to find where Emmanuel Cecchet or Julie Marguerite are and you will "+
+          "maybe get fresh news about all that !!<p>";
           int staticDescriptionLength = staticDescription.length();
           int totalItems = rubis.getTotalActiveItems()
               + rubis.getNbOfOldItems();
