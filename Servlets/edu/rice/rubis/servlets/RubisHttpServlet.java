@@ -64,7 +64,11 @@ public abstract class RubisHttpServlet extends HttpServlet
       dbProperties = new Properties();
       in = new FileInputStream(Config.DatabaseProperties);
       dbProperties.load(in);
-      // load the driver
+
+        // This is necessary for SteelDB
+        System.setProperty("divdb.folder", "/home/snake/Desktop/git/steeldb/config");
+      
+        // load the driver
       Class.forName(dbProperties.getProperty("datasource.classname"));
 
       freeConnections = new Stack();
@@ -186,6 +190,8 @@ public abstract class RubisHttpServlet extends HttpServlet
        } 
        catch (SQLException ex) 
        {
+           
+        System.out.println("SQLException: " + ex.getMessage());
         return null; 
        }
      }
