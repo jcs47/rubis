@@ -31,7 +31,7 @@ initDB:
 	${JAVA} -classpath ./Client/:./Client/build/RUBiS-1.0/:./database edu.rice.rubis.client.InitDB ${PARAM}
 
 emulator:
-	${JAVA} -classpath ./Client/:./Client/build/RUBiS-1.0/ edu.rice.rubis.client.ClientEmulator
+	${JAVA} -classpath ./Client/:./Client/build/RUBiS-1.0/:. edu.rice.rubis.client.ClientEmulator
 
 
 ############################
