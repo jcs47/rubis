@@ -149,7 +149,9 @@ public class RegisterUser extends RubisHttpServlet
       }
       catch (SQLException e)
       {
-        printError("Failed to execute Query for region: " + e, sp);
+        printError("Failed to execute Query for region: <br>", sp);
+        printError("Cause: " + e.toString() + "<br>", sp);
+        printError("Message: " + e.getMessage() + "<br>", sp);
         closeConnection(stmt, conn);
         return;
       }
@@ -227,7 +229,9 @@ public class RegisterUser extends RubisHttpServlet
     }
     catch (SQLException e)
     {
-      printError("Failed to execute Query for user: " + e, sp);
+      printError("Failed to execute Query for user: <br>", sp);
+      printError("Cause: " + e.toString() + "<br>", sp);
+      printError("Message: " + e.getMessage() + "<br>", sp);
       closeConnection(stmt, conn);
       return;
     }

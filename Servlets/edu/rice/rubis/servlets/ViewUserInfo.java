@@ -78,7 +78,9 @@ public class ViewUserInfo extends RubisHttpServlet
       }
       catch (Exception e)
       {
-        sp.printHTML("Failed to execute Query for list of comments: " + e);
+        sp.printHTML("Failed to execute Query for list of comments: <br>");
+        sp.printHTML("Cause: " + e.toString() + "<br>");
+        sp.printHTML("Message: " + e.getMessage() + "<br>");
         conn.rollback();
         closeConnection(stmt, conn);
         return false;
@@ -116,7 +118,9 @@ public class ViewUserInfo extends RubisHttpServlet
         }
         catch (Exception e)
         {
-          sp.printHTML("Failed to execute Query for the comment author: " + e);
+          sp.printHTML("Failed to execute Query for the comment author: <br>");
+          sp.printHTML("Cause: " + e.toString() + "<br>");
+          sp.printHTML("Message: " + e.getMessage() + "<br>");
           conn.rollback();
           authorStmt.close();
           closeConnection(stmt, conn);
@@ -188,7 +192,9 @@ public class ViewUserInfo extends RubisHttpServlet
     }
     catch (Exception e)
     {
-      sp.printHTML("Failed to execute Query for user: " + e);
+      sp.printHTML("Failed to execute Query for user: <br>");
+      sp.printHTML("Cause: " + e.toString() + "<br>");
+      sp.printHTML("Message: " + e.getMessage() + "<br>");
       closeConnection(stmt, conn);
       sp.printHTMLfooter();
       return;

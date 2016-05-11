@@ -222,7 +222,9 @@ public class RegisterItem extends RubisHttpServlet
       catch (SQLException e)
       {
         conn.rollback();
-        printError("Failed to execute Query for the new item: " + e, sp);
+        printError("Failed to execute Query for the new item: <br>", sp);
+        printError("Cause: " + e.toString() + "<br>", sp);
+        printError("Message: " + e.getMessage() + "<br>", sp);
         closeConnection(stmt, conn);
         return;
       }

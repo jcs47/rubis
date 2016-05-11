@@ -289,7 +289,9 @@ public class AboutMe extends RubisHttpServlet
           }
           catch (SQLException e)
           {
-            sp.printHTML("Failed to execute Query for item (buy now): " + e);
+            sp.printHTML("Failed to execute Query for item (buy now): <br>");
+            sp.printHTML("Cause: " + e.toString() + "<br>");
+            sp.printHTML("Message: " + e.getMessage() + "<br>");
             if (itemStmt != null) 
              itemStmt.close();
             closeConnection(stmt, conn);
@@ -317,7 +319,9 @@ public class AboutMe extends RubisHttpServlet
           }
           catch (SQLException e)
           {
-            sp.printHTML("Failed to execute Query for seller (buy now): " + e);
+            sp.printHTML("Failed to execute Query for seller (buy now): <br>");
+            sp.printHTML("Cause: " + e.toString() + "<br>");
+            sp.printHTML("Message: " + e.getMessage() + "<br>");
             if (sellerStmt != null) 
              sellerStmt.close();
             closeConnection(stmt, conn);
@@ -421,7 +425,9 @@ public class AboutMe extends RubisHttpServlet
           }
           catch (SQLException e)
           {
-            sp.printHTML("Failed to execute Query for item (won items): " + e);
+            sp.printHTML("Failed to execute Query for item (won items): <br>");
+            sp.printHTML("Cause: " + e.toString() + "<br>");
+            sp.printHTML("Message: " + e.getMessage() + "<br>");
             if (itemStmt != null) 
              itemStmt.close();
             closeConnection(stmt, conn);
@@ -449,9 +455,10 @@ public class AboutMe extends RubisHttpServlet
           }
           catch (SQLException e)
           {
-            sp.printHTML(
-              "Failed to execute Query for seller (won items): " + e);
-              if (sellerStmt != null) 
+            sp.printHTML("Failed to execute Query for seller (won items): <br>");
+            sp.printHTML("Cause: " + e.toString() + "<br>");
+            sp.printHTML("Message: " + e.getMessage() + "<br>");
+            if (sellerStmt != null) 
              sellerStmt.close();
             closeConnection(stmt, conn);
             sellerStmt = null;
@@ -525,7 +532,9 @@ public class AboutMe extends RubisHttpServlet
       }
       catch (Exception e)
       {
-        sp.printHTML("Failed to execute Query for list of comments: " + e);
+        sp.printHTML("Failed to execute Query for list of comments: <br>");
+        sp.printHTML("Cause: " + e.toString() + "<br>");
+        sp.printHTML("Message: " + e.getMessage() + "<br>");
         conn.rollback();
         closeConnection(stmt, conn);
         return false;
@@ -565,7 +574,9 @@ public class AboutMe extends RubisHttpServlet
         }
         catch (Exception e)
         {
-          sp.printHTML("Failed to execute Query for the comment author: " + e);
+          sp.printHTML("Failed to execute Query for the comment author: <br>");
+          sp.printHTML("Cause: " + e.toString() + "<br>");
+          sp.printHTML("Message: " + e.getMessage() + "<br>");
           conn.rollback();
           if (authorStmt != null)
              authorStmt.close();
@@ -647,8 +658,9 @@ public class AboutMe extends RubisHttpServlet
         }
         catch (Exception e)
         {
-          sp.printHTML(
-            "Failed to execute Query for item the user has bid on: " + e);
+          sp.printHTML("Failed to execute Query for titem the user has bid on: <br>");
+          sp.printHTML("Cause: " + e.toString() + "<br>");
+          sp.printHTML("Message: " + e.getMessage() + "<br>");
           if (itemStmt != null)
             itemStmt.close();
           closeConnection(stmt, conn);
@@ -701,7 +713,9 @@ public class AboutMe extends RubisHttpServlet
           }
           catch (Exception e)
           {
-            sp.printHTML("Failed to execute Query for seller (bids): " + e);          
+            sp.printHTML("Failed to execute Query for seller (bids): <br>");
+            sp.printHTML("Cause: " + e.toString() + "<br>");
+            sp.printHTML("Message: " + e.getMessage() + "<br>");
             if (itemStmt != null)
             itemStmt.close();
             if (sellerStmt != null)
@@ -810,7 +824,9 @@ public class AboutMe extends RubisHttpServlet
     }
     catch (Exception e)
     {
-      sp.printHTML("Failed to execute Query for user: " + e);
+      sp.printHTML("Failed to execute Query for user: <br>");
+      sp.printHTML("Cause: " + e.toString() + "<br>");
+      sp.printHTML("Message: " + e.getMessage() + "<br>");
       closeConnection(stmt, conn);
       sp.printHTMLfooter();
       return;

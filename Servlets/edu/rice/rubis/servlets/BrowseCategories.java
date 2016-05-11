@@ -54,7 +54,9 @@ public class BrowseCategories extends RubisHttpServlet
     }
     catch (Exception e)
     {
-      sp.printHTML("Failed to execute Query for categories list: " + e);
+      sp.printHTML("Failed to execute Query for categories list: <br>");
+      sp.printHTML("Cause: " + e.toString() + "<br>");
+      sp.printHTML("Message: " + e.getMessage() + "<br>");
       closeConnection(stmt, conn);
       return false;
     }
@@ -153,12 +155,14 @@ public class BrowseCategories extends RubisHttpServlet
       }
       catch (SQLException e)
       {
-        sp.printHTML("Failed to execute Query for region: " + e);
+        sp.printHTML("Failed to execute Query for region: <br>");
+        sp.printHTML("Cause: " + e.toString() + "<br>");
+        sp.printHTML("Message: " + e.getMessage() + "<br>");
         closeConnection(stmt, conn);
         return;
       }
     }
-
+    
     boolean connAlive = categoryList(regionId, userId, stmt, conn, sp);
     if (connAlive) {
         closeConnection(stmt, conn);

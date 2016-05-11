@@ -164,7 +164,9 @@ public class ViewBidHistory extends RubisHttpServlet
     }
     catch (Exception e)
     {
-      sp.printHTML("Failed to execute Query for item in table items: " + e);
+      sp.printHTML("Failed to execute Query for item in table items: <br>");
+      sp.printHTML("Cause: " + e.toString() + "<br>");
+      sp.printHTML("Message: " + e.getMessage() + "<br>");
       closeConnection(stmt, conn);
       return;
     }

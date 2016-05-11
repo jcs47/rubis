@@ -203,7 +203,9 @@ public class StoreBuyNow extends RubisHttpServlet
     }
     catch (SQLException e)
     {
-      sp.printHTML("Failed to execute Query for the item: " + e + "<br>");
+      sp.printHTML("Failed to execute Query for the item: <br>");
+      sp.printHTML("Cause: " + e.toString() + "<br>");
+      sp.printHTML("Message: " + e.getMessage() + "<br>");
       try
       {
         conn.rollback();

@@ -141,7 +141,9 @@ public class BuyNow extends RubisHttpServlet
       }
       catch (SQLException s)
       {
-        printError("Failed to execute Query for seller: " + s, sp);
+        printError("Failed to execute Query for seller: <br>", sp);
+        printError("Cause: " + s.toString() + "<br>", sp);
+        printError("Message: " + s.getMessage() + "<br>", sp);
         closeConnection(stmt, conn);
         return;
       }
@@ -161,7 +163,9 @@ public class BuyNow extends RubisHttpServlet
     }
     catch (SQLException e)
     {
-      printError("Failed to execute Query for item: " + e, sp);
+      printError("Failed to execute Query for item: <br>", sp);
+      printError("Cause: " + e.toString() + "<br>", sp);
+      printError("Message: " + e.getMessage() + "<br>", sp);
       closeConnection(stmt, conn);
       return;
     }

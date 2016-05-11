@@ -88,7 +88,9 @@ public class ViewItem extends RubisHttpServlet
     }
     catch (Exception e)
     {
-      sp.printHTML("Failed to execute Query for item: " + e);
+      sp.printHTML("Failed to execute Query for item: <br>");
+      sp.printHTML("Cause: " + e.toString() + "<br>");
+      sp.printHTML("Message: " + e.getMessage() + "<br>");
       closeConnection(stmt, conn);
       return;
     }
