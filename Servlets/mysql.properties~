@@ -7,11 +7,11 @@
 #
 
 #SteelDB
-datasource.name         steeldb
+#datasource.name         steeldb
 datasource.url          jdbc:bftdriver;rubis0;rubis1;rubis2;rubis3;rubis4
 datasource.classname    lasige.steeldb.jdbc.BFTDriver
-datasource.username     benchmarksql;benchmarksql;benchmarksql;benchmarksql
-datasource.password     password;password;password;password
+datasource.username     benchmarksql;benchmarksql;benchmarksql;benchmarksql;benchmarksql
+datasource.password     password;password;password;password;password
 
 #Normal Postgresql
 #datasource.name         postgresql
