@@ -45,7 +45,7 @@ import javax.servlet.http.HttpServlet;
 public abstract class RubisHttpServlet extends HttpServlet
 {
   /** Controls connection pooling */
-  private static final boolean enablePooling = false;
+  private static final boolean enablePooling = true;
   /** Stack of available connections (pool) */
   private Stack      freeConnections = null;
   private int        poolSize;
