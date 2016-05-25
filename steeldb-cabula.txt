@@ -1,0 +1,24 @@
+#Encontrar processo postgres que nao quero para nada
+ps aux | grep postgres
+
+#Lançar/parar postres que quero
+sudo -u postgres /usr/lib/postgresql/9.4/bin/pg_ctl restart -D /usr/local/pgsql/data
+
+#Logar como benchmark
+sudo -u benchmarksql /usr/lib/postgresql/9.4/bin/psql benchmark
+
+#Criar DBs
+sudo -u postgres /usr/lib/postgresql/9.4/bin/createdb benchmark0
+
+#Apagar DBs
+sudo -u postgres /usr/lib/postgresql/9.4/bin/dropdb benchmark0
+
+#Pasta steeldb: ~/Desktop/git/steeldb
+#Executar: ./startReplica.sh <id>
+
+#Pasta benchmark: ~/Desktop/benchmarksql-4.1.1/run
+#Executar: ./runBenchmark.sh props.bft
+
+#Compilar e copiar para RUBiS: ~/Desktop/git/steeldb
+rm -R bin/* ; ant ; cp -v bin/SteelDB.jar ../RUBiS/Servlet_HTML/WEB-INF/lib/
+

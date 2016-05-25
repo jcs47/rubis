@@ -1,0 +1,19 @@
+#Compilar Servlet RUBiS com ultimo build do steeldb: ~/Desktop/git/RUBiS/Servlets
+cp -v ../../steeldb/bin/SteelDB.jar ../Servlet_HTML/WEB-INF/lib/ ;  ant clean ; ant dist
+
+#matar tudo o que e java
+sudo killall java
+
+#Lançar tomcat: ~/apache-tomcat-8.0.15/bin
+./startup.sh
+# fazer deploy do .war em ~/Desktop/git/RUBiS/Servlets/
+
+#Lançar benchmark rubis: ~/Desktop/git/RUBiS/
+make emulator
+
+#Criar BD: ~/Desktop/git/RUBiS/
+sudo -u postgres /usr/lib/postgresql/9.4/bin/createdb rubis
+sudo -u postgres /usr/lib/postgresql/9.4/bin/psql rubis < ~/Desktop/git/RUBiS/database/backup_users_only.sql
+make initDB PARAM="items bids comments"
+
+#Link util: https://underyx.me/2015/05/18/raising-the-maximum-number-of-file-descriptors
