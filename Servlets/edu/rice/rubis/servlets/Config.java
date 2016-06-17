@@ -22,7 +22,8 @@ public class Config
   public static final String DatabaseProperties =
     "/home/snake/Desktop/git/RUBiS/Servlets/mysql.properties";
 
-  public static final int AboutMePoolSize = 10;
+ // original values for pooling
+ /* public static final int AboutMePoolSize = 10;
   public static final int BrowseCategoriesPoolSize = 6;
   public static final int BrowseRegionsPoolSize = 6;
   public static final int BuyNowPoolSize = 4;
@@ -37,5 +38,22 @@ public class Config
   public static final int StoreCommentPoolSize = 2;
   public static final int ViewBidHistoryPoolSize = 4;
   public static final int ViewItemPoolSize = 20;
-  public static final int ViewUserInfoPoolSize = 4;
+  public static final int ViewUserInfoPoolSize = 4;*/
+  
+  public static final int AboutMePoolSize = 3;
+  public static final int BrowseCategoriesPoolSize = 3;
+  public static final int BrowseRegionsPoolSize = 3;
+  public static final int BuyNowPoolSize = 3;
+  public static final int PutBidPoolSize = 3;
+  public static final int PutCommentPoolSize = 3;
+  public static final int RegisterItemPoolSize = 3;
+  public static final int RegisterUserPoolSize = 3;
+  public static final int SearchItemsByCategoryPoolSize = 3;
+  public static final int SearchItemsByRegionPoolSize = 3;
+  public static final int StoreBidPoolSize = 3;
+  public static final int StoreBuyNowPoolSize = 3;
+  public static final int StoreCommentPoolSize = 3;
+  public static final int ViewBidHistoryPoolSize = 3;
+  public static final int ViewItemPoolSize = 3;
+  public static final int ViewUserInfoPoolSize = 3;
 }

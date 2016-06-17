@@ -8,12 +8,33 @@ sudo killall java
 ./startup.sh
 # fazer deploy do .war em ~/Desktop/git/RUBiS/Servlets/
 
+#Compilar client de benchmark rubis: ~/Desktop/git/RUBiS/
+make client
+
 #Lançar benchmark rubis: ~/Desktop/git/RUBiS/
 make emulator
 
-#Criar BD: ~/Desktop/git/RUBiS/
+#Criar BD (1): ~/Desktop/git/RUBiS/
 sudo -u postgres /usr/lib/postgresql/9.4/bin/createdb rubis
 sudo -u postgres /usr/lib/postgresql/9.4/bin/psql rubis < ~/Desktop/git/RUBiS/database/backup_users_only.sql
 make initDB PARAM="items bids comments"
+
+#Criar BD (2): ~/Desktop/git/RUBiS/
+sudo -u postgres /usr/lib/postgresql/9.4/bin/createdb rubis
+sudo -u postgres /usr/lib/postgresql/9.4/bin/psql rubis < ~/Desktop/git/RUBiS/database/rubis.postgres.sql 
+sudo -u postgres /usr/lib/postgresql/9.4/bin/psql rubis < ~/Desktop/git/RUBiS/database/categories.sql 
+sudo -u postgres /usr/lib/postgresql/9.4/bin/psql rubis < ~/Desktop/git/RUBiS/database/regions.sql 
+make initDB PARAM="all"
+
+#Criar BD (3): ~/Desktop/git/RUBiS/
+sudo -u postgres /usr/lib/postgresql/9.4/bin/psql rubis < ~/Desktop/git/RUBiS/database/backup_all.sql
+
+#Criar BD replicada (localmente): ~/Desktop/git/RUBiS/
+Primeiro, criar BD normal (ver acima)
+sudo -u postgres /usr/lib/postgresql/9.4/bin/psql rubis
+	CREATE DATABASE rubis0 WITH TEMPLATE rubis OWNER benchmarksql;
+	CREATE DATABASE rubis1 WITH TEMPLATE rubis OWNER benchmarksql;
+	CREATE DATABASE rubis2 WITH TEMPLATE rubis OWNER benchmarksql;
+	CREATE DATABASE rubis3 WITH TEMPLATE rubis OWNER benchmarksql;
 
 #Link util: https://underyx.me/2015/05/18/raising-the-maximum-number-of-file-descriptors
