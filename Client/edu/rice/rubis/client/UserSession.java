@@ -803,7 +803,7 @@ public class UserSession extends Thread
         }
 
         // If an error occured, reset to Home page
-        else if (lastHTMLReply.indexOf("ERROR") != -1)
+        else if (lastHTMLReply.indexOf("Your request has not been processed due to the following error") != -1)
         {
           if (debugLevel > 0)
             System.out.println("Thread " + this.getName()
