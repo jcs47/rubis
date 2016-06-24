@@ -41,9 +41,14 @@ public class Auth
       }
       userId = rs.getInt("id");
     }
-    catch (SQLException e)
+    catch (Exception e)
     {
-      sp.printHTML("Failed to executeQuery " + e);
+      sp.printHTML("<h3>Your request has not been processed due to the following error:</h3><br>");
+      sp.printHTML("<p>Cause: " + e.toString() + "</p>");
+      sp.printHTML("<p>Message: " + e.getMessage() + "</p>");
+      sp.printHTML("<p>Stacktrace: </p><blockquote>");
+      e.printStackTrace(sp.getOut());
+      sp.printHTML("</blockquote>");
       return userId;
     }
     finally
