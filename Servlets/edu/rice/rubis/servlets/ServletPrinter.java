@@ -40,6 +40,18 @@ public class ServletPrinter
     servletName = callingServletName;
   }
 
+  public PrintWriter getOut() {
+      return out;
+  }
+
+  public String getServletName() {
+      return servletName;
+  }
+
+  public GregorianCalendar getStartDate() {
+      return startDate;
+  }
+    
   void printFile(String filename)
   {
     FileReader fis = null;
@@ -330,12 +342,12 @@ public class ServletPrinter
       }
       if (userId > 0)
       {
-        printHTMLheader("RUBiS: Bidding\n");
+        //printHTMLheader("RUBiS: Bidding\n");
         printHTMLHighlighted("You are ready to bid on: " + itemName);
       }
       else
       {
-        printHTMLheader("RUBiS: Viewing " + itemName + "\n");
+        //printHTMLheader("RUBiS: Viewing " + itemName + "\n");
         printHTMLHighlighted(itemName);
       }
       out.println(
@@ -671,7 +683,7 @@ public class ServletPrinter
     try
     {
 
-      printHTMLheader("RUBiS: Buy Now");
+      //printHTMLheader("RUBiS: Buy Now");
       printHTMLHighlighted("You are ready to buy this item: " + itemName);
 
       out.println(
