@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.EmptyStackException;
 import java.util.Properties;
@@ -171,11 +172,12 @@ public abstract class RubisHttpServlet extends HttpServlet
       
 
         Connection c = (Connection) freeConnections.pop();
+        c.setAutoCommit(true); // reset connection status
         return c;
       }
-      catch (EmptyStackException e)
+      catch (Exception e)
       {
-       System.out.println("Out of connections.");
+        e.printStackTrace(System.out);
         return null;
       }
     }
@@ -188,7 +190,7 @@ public abstract class RubisHttpServlet extends HttpServlet
         dbProperties.getProperty("datasource.username"),
         dbProperties.getProperty("datasource.password"));
        } 
-       catch (SQLException ex) 
+       catch (Exception ex) 
        {
            
         System.out.println("SQLException: " + ex.getMessage());
@@ -246,9 +248,54 @@ public abstract class RubisHttpServlet extends HttpServlet
     {
       finalizeConnections();
     }
-    catch (SQLException e)
+    catch (Exception e)
     {
     }
   }
 
+  /**
+    * Display an error message.
+    * @param errorMsg the error message value
+    */
+    public void printError(String errorMsg, ServletPrinter sp)
+    {
+        sp.printHTML("<h2>Your request has not been processed due to the following error:</h2>");
+        sp.printHTML("<h3>" + errorMsg + "</h3>");
+    
+  }
+    
+    public void printException(Exception e, ServletPrinter sp) {
+      sp.printHTML("<p>Cause: " + e.toString() + "</p>");
+      sp.printHTML("<p>Message: " + e.getMessage() + "</p>");
+      sp.printHTML("<p>Stacktrace: </p><blockquote>");
+      e.printStackTrace(sp.getOut());
+      sp.printHTML("</blockquote>");
+    }
+
+/**
+ * Close both statement and connection.
+ */
+  public void closeConnection(PreparedStatement stmt, Connection conn)
+  {
+    try
+    {
+      if (conn != null)
+        if (conn.getAutoCommit() == false)
+          conn.rollback();
+    }
+    catch (Exception e)
+    {
+    }
+    try
+    {
+      if (stmt != null)
+        stmt.close(); // close statement
+    }
+    catch (SQLException e)
+    {
+
+    }
+    if (conn != null)
+      releaseConnection(conn);
+  }
 }
