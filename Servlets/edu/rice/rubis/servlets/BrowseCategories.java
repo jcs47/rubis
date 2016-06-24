@@ -22,22 +22,6 @@ public class BrowseCategories extends RubisHttpServlet
     return Config.BrowseCategoriesPoolSize;
   }
   
-  /**
-   * Close the connection and statement.
-   */
-  private void closeConnection(PreparedStatement stmt, Connection conn)
-  {
-    try
-    {
-      if (stmt != null)
-        stmt.close(); // close statement
-      if (conn != null)
-        releaseConnection(conn);
-    }
-    catch (Exception ignore)
-    {
-    }
-  }
 
   /** List all the categories in the database */
   private boolean categoryList(int regionId, int userId, PreparedStatement stmt, Connection conn, ServletPrinter sp)
@@ -54,9 +38,8 @@ public class BrowseCategories extends RubisHttpServlet
     }
     catch (Exception e)
     {
-      sp.printHTML("Failed to execute Query for categories list: <br>");
-      sp.printHTML("Cause: " + e.toString() + "<br>");
-      sp.printHTML("Message: " + e.getMessage() + "<br>");
+      printError("Failed to execute Query for categories list.", sp);
+      printException(e, sp);
       closeConnection(stmt, conn);
       return false;
     }
@@ -64,8 +47,7 @@ public class BrowseCategories extends RubisHttpServlet
     {
       if (!rs.first())
       {
-        sp.printHTML(
-          "<h2>Sorry, but there is no category available at this time. Database table is empty</h2><br>");
+        printError("Sorry, but there is no category available at this time. Database table is empty.", sp);
         closeConnection(stmt, conn);
         return false;
       }
@@ -93,7 +75,8 @@ public class BrowseCategories extends RubisHttpServlet
     }
     catch (Exception e)
     {
-      sp.printHTML("Exception getting categories list: " + e + "<br>");
+      printError("Exception getting categories list.", sp);
+      printException(e, sp);
       closeConnection(stmt, conn);
       return false;
     }
@@ -126,8 +109,7 @@ public class BrowseCategories extends RubisHttpServlet
       userId = auth.authenticate(username, password);
       if (userId == -1)
       {
-        sp.printHTML(
-          " You don't have an account on RUBiS!<br>You have to register first.<br>");
+        printError("You don't have an account on RUBiS! You have to register first.", sp);
         sp.printHTMLfooter();
         closeConnection(stmt, conn);
         return;
@@ -145,19 +127,19 @@ public class BrowseCategories extends RubisHttpServlet
         ResultSet rs = stmt.executeQuery();
         if (!rs.first())
         {
-          sp.printHTML(
-            " Region " + value + " does not exist in the database!<br>");
+          printError(" Region " + value + " does not exist in the database!", sp);
+          sp.printHTMLfooter();
           closeConnection(stmt, conn);
           return;
         }
         regionId = rs.getInt("id");
         stmt.close();
       }
-      catch (SQLException e)
+      catch (Exception e)
       {
-        sp.printHTML("Failed to execute Query for region: <br>");
-        sp.printHTML("Cause: " + e.toString() + "<br>");
-        sp.printHTML("Message: " + e.getMessage() + "<br>");
+        printError("Failed to execute Query for region.", sp);
+        printException(e, sp);
+        sp.printHTMLfooter();
         closeConnection(stmt, conn);
         return;
       }
@@ -184,5 +166,5 @@ public class BrowseCategories extends RubisHttpServlet
   {
     super.destroy();
   }
-
+  
 }

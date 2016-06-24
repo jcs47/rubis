@@ -30,37 +30,6 @@ public class SearchItemsByCategory extends RubisHttpServlet
     return Config.SearchItemsByCategoryPoolSize;
   }
 
-/**
- * Close both statement and connection.
- */
-  private void closeConnection(PreparedStatement stmt, Connection conn)
-  {
-    try
-    {
-      if (stmt != null)
-        stmt.close(); // close statement
-      if (conn != null)
-        releaseConnection(conn);
-    }
-    catch (Exception ignore)
-    {
-    }
-  }
-
-/**
- * Display an error message.
- * @param errorMsg the error message value
- */
-  private void printError(String errorMsg, ServletPrinter sp)
-  {
-    sp.printHTMLheader("RUBiS ERROR: Search Items By Category");
-    sp.printHTML(
-      "<h2>We cannot process your request due to the following error :</h2><br>");
-    sp.printHTML(errorMsg);
-    sp.printHTMLfooter();
-    
-  }
-
   private void itemList(
     Integer categoryId,
     String categoryName,
@@ -95,7 +64,8 @@ public class SearchItemsByCategory extends RubisHttpServlet
     }
     catch (Exception e)
     {
-      sp.printHTML("Failed to executeQuery for item: " + e);
+      printError("Failed to executeQuery for item.", sp);
+      printException(e, sp);
       closeConnection(stmt, conn);
       return;
     }
@@ -184,7 +154,8 @@ public class SearchItemsByCategory extends RubisHttpServlet
     }
     catch (Exception e)
     {
-      printError("Exception getting item list: " + e + "<br>", sp);
+      printError("Exception getting item list.", sp);
+      printException(e, sp);
       //       try
       //       {
       //         conn.rollback();
@@ -209,10 +180,12 @@ public class SearchItemsByCategory extends RubisHttpServlet
 
     ServletPrinter sp = null;
     sp = new ServletPrinter(response, "SearchItemsByCategory");
+    sp.printHTMLheader("RUBiS: Search items by category");
 
     if ((value == null) || (value.equals("")))
     {
-      printError("You must provide a category identifier!<br>", sp);
+      printError("You must provide a category identifier!", sp);
+      sp.printHTMLfooter();
       return;
     }
     else
@@ -232,16 +205,13 @@ public class SearchItemsByCategory extends RubisHttpServlet
 
     if (categoryName == null)
     {
-      sp.printHTMLheader("RUBiS: Missing category name");
-      sp.printHTML("<h2>Items in this category</h2><br><br>");
+      printError("You must provide a category name!", sp);
     }
     else
     {
-      sp.printHTMLheader("RUBiS: Items in category " + categoryName);
       sp.printHTML("<h2>Items in category " + categoryName + "</h2><br><br>");
+      itemList(categoryId, categoryName, page.intValue(), nbOfItems.intValue(), sp);
     }
-
-    itemList(categoryId, categoryName, page.intValue(), nbOfItems.intValue(), sp);
     sp.printHTMLfooter();
   }
 

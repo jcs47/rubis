@@ -22,37 +22,6 @@ public class SearchItemsByRegion extends RubisHttpServlet
     return Config.SearchItemsByRegionPoolSize;
   }
 
-/**
- * Close both statement and connection.
- */
-  private void closeConnection(PreparedStatement stmt, Connection conn)
-  {
-    try
-    {
-      if (stmt != null)
-        stmt.close(); // close statement
-      if (conn != null)
-        releaseConnection(conn);
-    }
-    catch (Exception ignore)
-    {
-    }
-  }
-
-/**
- * Display an error message.
- * @param errorMsg the error message value
- */
-  private void printError(String errorMsg, ServletPrinter sp)
-  {
-    sp.printHTMLheader("RUBiS ERROR: SearchItemsByRegion");
-    sp.printHTML(
-      "<h2>Your request has not been processed due to the following error :</h2><br>");
-    sp.printHTML(errorMsg);
-    sp.printHTMLfooter();
-    
-  }
-
   /** List items in the given category for the given region */
   private void itemList(
     Integer categoryId,
@@ -84,9 +53,8 @@ public class SearchItemsByRegion extends RubisHttpServlet
     }
     catch (Exception e)
     {
-      sp.printHTML("Failed to execute Query for items in region: <br>");
-      sp.printHTML("Cause: " + e.toString() + "<br>");
-      sp.printHTML("Message: " + e.getMessage() + "<br>");
+      printError("Failed to execute Query for items in region.", sp);
+      printException(e, sp);
       closeConnection(stmt, conn);
       return;
     }
@@ -174,7 +142,8 @@ public class SearchItemsByRegion extends RubisHttpServlet
     }
     catch (Exception e)
     {
-      sp.printHTML("Exception getting item list: " + e + "<br>");
+      printError("Exception getting item list.", sp);
+      printException(e, sp);
       closeConnection(stmt, conn);
     }
   }
@@ -190,11 +159,13 @@ public class SearchItemsByRegion extends RubisHttpServlet
 
     ServletPrinter sp = null;
     sp = new ServletPrinter(response, "SearchItemsByRegion");
+    sp.printHTMLheader("RUBiS: Search items by region");
 
     String value = request.getParameter("category");
     if ((value == null) || (value.equals("")))
     {
-      printError("You must provide a category!<br>", sp);
+      printError("You must provide a category!", sp);
+      sp.printHTMLfooter();
       return;
     }
     else
@@ -203,7 +174,8 @@ public class SearchItemsByRegion extends RubisHttpServlet
     value = request.getParameter("region");
     if ((value == null) || (value.equals("")))
     {
-      printError("You must provide a region!<br>", sp);
+      printError("You must provide a region!", sp);
+      sp.printHTMLfooter();
       return;
     }
     else
@@ -221,7 +193,6 @@ public class SearchItemsByRegion extends RubisHttpServlet
     else
       nbOfItems = new Integer(value);
 
-    sp.printHTMLheader("RUBiS: Search items by region");
     itemList(categoryId, regionId, page.intValue(), nbOfItems.intValue(), sp);
     sp.printHTMLfooter();
   }

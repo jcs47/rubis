@@ -20,22 +20,6 @@ public class BrowseRegions extends RubisHttpServlet
     return Config.BrowseRegionsPoolSize;
   }
 
-/**
- * Close both statement and connection.
- */
-  private void closeConnection(PreparedStatement stmt, Connection conn)
-  {
-    try
-    {
-      if (stmt != null)
-        stmt.close(); // close statement
-      if (conn != null)
-        releaseConnection(conn);
-    }
-    catch (Exception ignore)
-    {
-    }
-  }
   
 /**
  * Get the list of regions from the database
@@ -57,7 +41,8 @@ public class BrowseRegions extends RubisHttpServlet
     }
     catch (Exception e)
     {
-      sp.printHTML("Failed to executeQuery for the list of regions" + e);
+      printError("Failed to executeQuery for the list of regions.", sp);
+      printException(e, sp);
       closeConnection(stmt, conn);
       return;
     }
@@ -65,8 +50,7 @@ public class BrowseRegions extends RubisHttpServlet
     {
       if (!rs.first())
       {
-        sp.printHTML(
-          "<h2>Sorry, but there is no region available at this time. Database table is empty</h2><br>");
+        printError("Sorry, but there is no region available at this time. Database table is empty.", sp);
         closeConnection(stmt, conn);
         return;
       }
@@ -84,7 +68,8 @@ public class BrowseRegions extends RubisHttpServlet
     }
     catch (Exception e)
     {
-      sp.printHTML("Exception getting region list: " + e + "<br>");    
+      printError("Exception getting region list.", sp);
+      printException(e, sp);
       closeConnection(stmt, conn);
     }
   }

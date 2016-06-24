@@ -26,22 +26,6 @@ public class ViewBidHistory extends RubisHttpServlet
     return Config.ViewBidHistoryPoolSize;
   }
 
-/**
- * Close both statement and connection to the database.
- */
-  private void closeConnection(PreparedStatement stmt, Connection conn)
-  {
-    try
-    {
-      if (stmt != null)
-        stmt.close(); // close statement
-      if (conn != null)
-        releaseConnection(conn);
-    }
-    catch (Exception ignore)
-    {
-    }
-  }
 
   /** List the bids corresponding to an item */
   private boolean listBids(Integer itemId, PreparedStatement stmt, Connection conn, ServletPrinter sp)
@@ -68,9 +52,10 @@ public class ViewBidHistory extends RubisHttpServlet
         return false;
       }
     }
-    catch (SQLException e)
+    catch (Exception e)
     {
-      sp.printHTML("Exception getting bids list: " + e + "<br>");
+      printError("Exception getting bids list.", sp);
+      printException(e, sp);
       closeConnection(stmt, conn);
       return false;
     }
@@ -94,15 +79,16 @@ public class ViewBidHistory extends RubisHttpServlet
           urs = stmt.executeQuery();
           if (!urs.first())
           {
-            sp.printHTML("This user does not exist in the database.<br>");
+            printError("This user does not exist in the database.", sp);
             closeConnection(stmt, conn);
             return false;
           }
           bidderName = urs.getString("nickname");
         }
-        catch (SQLException e)
+        catch (Exception e)
         {
-          sp.printHTML("Couldn't get bidder name: " + e + "<br>");
+          printError("Couldn't get bidder name.", sp);
+          printException(e, sp);
           closeConnection(stmt, conn);
           return false;
         }
@@ -110,9 +96,10 @@ public class ViewBidHistory extends RubisHttpServlet
       }
       while (rs.next());
     }
-    catch (SQLException e)
+    catch (Exception e)
     {
-      sp.printHTML("Exception getting bid: " + e + "<br>");
+      printError("Exception getting bid.", sp);
+      printException(e, sp);
       closeConnection(stmt, conn);
       return false;
     }
@@ -138,10 +125,10 @@ public class ViewBidHistory extends RubisHttpServlet
     Connection conn = null;
 
     sp = new ServletPrinter(response, "ViewBidHistory");
-
+    sp.printHTMLheader("RUBiS: Bid history");
+    
     if ((value == null) || (value.equals("")))
     {
-      sp.printHTMLheader("RUBiS ERROR: View bids history");
       sp.printHTML("<h3>You must provide an item identifier !<br></h3>");
       sp.printHTMLfooter();
       return;
@@ -150,8 +137,6 @@ public class ViewBidHistory extends RubisHttpServlet
       itemId = new Integer(value);
     if (itemId.intValue() == -1)
       sp.printHTML("ItemId is -1: this item does not exist.<br>");
-
-    sp.printHTMLheader("RUBiS: Bid history");
 
     // get the item
     try
@@ -164,9 +149,9 @@ public class ViewBidHistory extends RubisHttpServlet
     }
     catch (Exception e)
     {
-      sp.printHTML("Failed to execute Query for item in table items: <br>");
-      sp.printHTML("Cause: " + e.toString() + "<br>");
-      sp.printHTML("Message: " + e.getMessage() + "<br>");
+      printError("Failed to execute Query for item in table items.", sp);
+      printException(e, sp);
+      sp.printHTMLfooter();
       closeConnection(stmt, conn);
       return;
     }
@@ -203,7 +188,8 @@ public class ViewBidHistory extends RubisHttpServlet
     }
     catch (Exception e)
     {
-      sp.printHTML("This item does not exist (got exception: " + e + ")<br>");
+      printError("This item does not exist.", sp);
+      printException(e, sp);
       sp.printHTMLfooter();
       closeConnection(stmt, conn);
       return;
@@ -225,5 +211,5 @@ public class ViewBidHistory extends RubisHttpServlet
   {
     super.destroy();
   }
-
+  
 }

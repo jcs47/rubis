@@ -17,7 +17,7 @@ import javax.servlet.http.HttpServletResponse;
  * /<pre>
  */
 
-public class PutCommentAuth extends HttpServlet
+public class PutCommentAuth extends RubisHttpServlet
 {
 
 
@@ -26,19 +26,17 @@ public class PutCommentAuth extends HttpServlet
   {
     ServletPrinter sp = null;
     sp = new ServletPrinter(response, "PubCommentAuth");
+    sp.printHTMLheader("RUBiS: User authentification for comment");
 
     String to = request.getParameter("to");
     String item = request.getParameter("itemId");
     if ((to == null) || (to.equals("")) || (item == null) || (item.equals("")))
     {
-      sp.printHTMLheader("RUBiS ERROR: Authentification for comment");
-      sp.printHTML(
-        "No item or user identifier received - Cannot process the request<br>");
+      printError("No item or user identifier received - Cannot process the request.", sp);
       sp.printHTMLfooter();
       return;
     }
 
-    sp.printHTMLheader("RUBiS: User authentification for comment");
     sp.printFile(Config.HTMLFilesPath + "/put_comment_auth_header.html");
     sp.printHTML("<input type=hidden name=\"to\" value=\"" + to + "\">");
     sp.printHTML("<input type=hidden name=\"itemId\" value=\"" + item + "\">");
@@ -51,4 +49,9 @@ public class PutCommentAuth extends HttpServlet
   {
     doGet(request, response);
   }
+
+    @Override
+    public int getPoolSize() {
+        return 0;
+    }
 }

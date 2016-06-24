@@ -31,36 +31,6 @@ public class BuyNow extends RubisHttpServlet
     return Config.BuyNowPoolSize;
   }
 
-/**
- * Close both statement and connection.
- */
-  private void closeConnection(PreparedStatement stmt, Connection conn)
-  {
-    try
-    {
-      if (stmt != null)
-        stmt.close(); // close statement
-      if (conn != null)
-        releaseConnection(conn);
-    }
-    catch (Exception ignore)
-    {
-    }
-  }
-
-/**
- * Display an error message.
- * @param errorMsg the error message value
- */
-  private void printError(String errorMsg, ServletPrinter sp)
-  {
-    sp.printHTMLheader("RUBiS ERROR: Buy now");
-    sp.printHTML(
-      "<h2>Your request has not been processed due to the following error :</h2><br>");
-    sp.printHTML(errorMsg);
-    sp.printHTMLfooter();
-  }
-
   /**
    * Authenticate the user and end the display a buy now form
    *
@@ -78,6 +48,7 @@ public class BuyNow extends RubisHttpServlet
     String name = request.getParameter("nickname");
     String pass = request.getParameter("password");
     sp = new ServletPrinter(response, "BuyNow");
+    sp.printHTMLheader("RUBiS: Buy now"); 
 
     if ((itemStr == null)
       || (itemStr.equals(""))
@@ -86,7 +57,8 @@ public class BuyNow extends RubisHttpServlet
       || (pass == null)
       || (pass.equals("")))
     {
-      printError("Item id, name and password are required - Cannot process the request<br>", sp);
+      printError("Item id, name and password are required - Cannot process the request.", sp);
+      sp.printHTMLfooter();
       return;
     }
     PreparedStatement stmt = null;
@@ -99,7 +71,8 @@ public class BuyNow extends RubisHttpServlet
     {
       sp.printHTML("name: " + name + "<br>");
       sp.printHTML("pwd: " + pass + "<br>");
-      printError(" You don't have an account on RUBiS!<br>You have to register first.<br>", sp);
+      printError(" You don't have an account on RUBiS! You have to register first.", sp);
+      sp.printHTMLfooter();
       closeConnection(stmt, conn);
       return;
     }
@@ -113,6 +86,7 @@ public class BuyNow extends RubisHttpServlet
       if (!irs.first())
       {
         printError("This item does not exist in the database.", sp);
+        sp.printHTMLfooter();
         closeConnection(stmt, conn);
         return;
       }
@@ -134,16 +108,17 @@ public class BuyNow extends RubisHttpServlet
         if (!srs.first())
         {
           printError("This user does not exist in the database.", sp);
+          sp.printHTMLfooter();
           closeConnection(stmt, conn);
           return;
         }
         sellerName = srs.getString("nickname");
       }
-      catch (SQLException s)
+      catch (Exception e)
       {
-        printError("Failed to execute Query for seller: <br>", sp);
-        printError("Cause: " + s.toString() + "<br>", sp);
-        printError("Message: " + s.getMessage() + "<br>", sp);
+        printError("Failed to execute Query for seller.", sp);
+        printException(e, sp);
+        sp.printHTMLfooter();
         closeConnection(stmt, conn);
         return;
       }
@@ -161,11 +136,11 @@ public class BuyNow extends RubisHttpServlet
         userId);
 
     }
-    catch (SQLException e)
+    catch (Exception e)
     {
-      printError("Failed to execute Query for item: <br>", sp);
-      printError("Cause: " + e.toString() + "<br>", sp);
-      printError("Message: " + e.getMessage() + "<br>", sp);
+      printError("Failed to execute Query for item.", sp);
+      printException(e, sp);
+      sp.printHTMLfooter();
       closeConnection(stmt, conn);
       return;
     }

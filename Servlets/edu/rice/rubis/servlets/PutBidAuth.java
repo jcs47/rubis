@@ -17,7 +17,7 @@ import javax.servlet.http.HttpServletResponse;
  * @version 1.0
  */
 
-public class PutBidAuth extends HttpServlet
+public class PutBidAuth extends RubisHttpServlet
 {
 
 
@@ -26,18 +26,16 @@ public class PutBidAuth extends HttpServlet
   {
     ServletPrinter sp = null;
     sp = new ServletPrinter(response, "PubBidAuth");
+    sp.printHTMLheader("RUBiS: User authentification for bidding");
 
     String value = request.getParameter("itemId");
     if ((value == null) || (value.equals("")))
     {
-      sp.printHTMLheader("RUBiS ERROR: Authentification for bidding");
-      sp.printHTML(
-        "No item identifier received - Cannot process the request<br>");
+      printError("No item identifier received - Cannot process the request.", sp);
       sp.printHTMLfooter();
       return;
     }
 
-    sp.printHTMLheader("RUBiS: User authentification for bidding");
     sp.printFile(Config.HTMLFilesPath + "/put_bid_auth_header.html");
     sp.printHTML("<input type=hidden name=\"itemId\" value=\"" + value + "\">");
     sp.printFile(Config.HTMLFilesPath + "/auth_footer.html");
@@ -49,4 +47,9 @@ public class PutBidAuth extends HttpServlet
   {
     doGet(request, response);
   }
+
+    @Override
+    public int getPoolSize() {
+        return 0;
+    }
 }

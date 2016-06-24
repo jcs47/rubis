@@ -30,37 +30,6 @@ public class PutComment extends RubisHttpServlet
     return Config.PutCommentPoolSize;
   }
 
-/**
- * Close both statement and connection.
- */
-  private void closeConnection(PreparedStatement stmt, Connection conn)
-  {
-    try
-    {
-      if (stmt != null)
-        stmt.close(); // close statement
-      if (conn != null)
-        releaseConnection(conn);
-    }
-    catch (Exception ignore)
-    {
-    }
-  }
-
-/**
- * Display an error message.
- * @param errorMsg the error message value
- */
-  private void printError(String errorMsg, ServletPrinter sp)
-  {
-    sp.printHTMLheader("RUBiS ERROR: PutComment");
-    sp.printHTML(
-      "<h2>Your request has not been processed due to the following error :</h2><br>");
-    sp.printHTML(errorMsg);
-    sp.printHTMLfooter();
- 
-  }
-
   public void doGet(HttpServletRequest request, HttpServletResponse response)
     throws IOException, ServletException
   {
@@ -71,6 +40,7 @@ public class PutComment extends RubisHttpServlet
     String name = request.getParameter("nickname");
     String pass = request.getParameter("password");
     sp = new ServletPrinter(response, "PubComment");
+    sp.printHTMLheader("RUBiS: Put comment");
 
     if ((toStr == null)
       || (toStr.equals(""))
@@ -81,7 +51,8 @@ public class PutComment extends RubisHttpServlet
       || (pass == null)
       || (pass.equals("")))
     {
-      printError("User id, name and password are required - Cannot process the request<br>", sp);
+      printError("User id, name and password are required - Cannot process the request.", sp);
+      sp.printHTMLfooter();
       return;
     }
 
@@ -93,7 +64,8 @@ public class PutComment extends RubisHttpServlet
     int userId = auth.authenticate(name, pass);
     if (userId == -1)
     {
-      printError("You don't have an account on RUBiS!<br>You have to register first.<br>", sp);
+      printError("You don't have an account on RUBiS! You have to register first.", sp);
+      sp.printHTMLfooter();
       closeConnection(stmt, conn);
       return;
     }
@@ -117,9 +89,9 @@ public class PutComment extends RubisHttpServlet
       }
       catch (Exception e)
       {
-        printError("Failed to execute Query for user: <br>", sp);
-        printError("Cause: " + e.toString() + "<br>", sp);
-        printError("Message: " + e.getMessage() + "<br>", sp);
+        printError("Failed to execute Query for user.", sp);
+        printException(e, sp);
+        sp.printHTMLfooter();
         closeConnection(stmt, conn);
         return;
       }
@@ -134,15 +106,14 @@ public class PutComment extends RubisHttpServlet
       }
       catch (Exception e)
       {
-        printError("Failed to execute Query for item: <br>", sp);
-        printError("Cause: " + e.toString() + "<br>", sp);
-        printError("Message: " + e.getMessage() + "<br>", sp);
+        printError("Failed to execute Query for item.", sp);
+        printException(e, sp);
+        sp.printHTMLfooter();
         closeConnection(stmt, conn);
         return;
       }
 
       // Display the form for comment
-      sp.printHTMLheader("RUBiS: Comment service");
       sp.printHTML(
         "<center><h2>Give feedback about your experience with "
           + toName
@@ -178,7 +149,9 @@ public class PutComment extends RubisHttpServlet
     }
     catch (Exception e)
     {
-      printError("This item does not exist (got exception: " + e + ")<br>", sp);
+      printError("This item does not exist.", sp);
+      printException(e, sp);
+      sp.printHTMLfooter();
       closeConnection(stmt, conn);
       return;
     }

@@ -17,7 +17,7 @@ import javax.servlet.http.HttpServletResponse;
  * @version 1.0
  */
 
-public class BuyNowAuth extends HttpServlet
+public class BuyNowAuth extends RubisHttpServlet
 {
 
 
@@ -27,18 +27,16 @@ public class BuyNowAuth extends HttpServlet
   {
     ServletPrinter sp = null;
     sp = new ServletPrinter(response, "BuyNowAuth");
+    sp.printHTMLheader("RUBiS: User authentification for buying an item");
 
     String value = request.getParameter("itemId");
     if ((value == null) || (value.equals("")))
     {
-      sp.printHTMLheader("RUBiS ERROR: Authentification for buying an item");
-      sp.printHTML(
-        "No item identifier received - Cannot process the request<br>");
+      printError("No item identifier received - Cannot process the request.", sp);
       sp.printHTMLfooter();
       return;
     }
 
-    sp.printHTMLheader("RUBiS: User authentification for buying an item");
     sp.printFile(Config.HTMLFilesPath + "/buy_now_auth_header.html");
     sp.printHTML("<input type=hidden name=\"itemId\" value=\"" + value + "\">");
     sp.printFile(Config.HTMLFilesPath + "/auth_footer.html");
@@ -51,4 +49,9 @@ public class BuyNowAuth extends HttpServlet
   {
     doGet(request, response);
   }
+
+    @Override
+    public int getPoolSize() {
+        return 0;
+    }
 }

@@ -30,32 +30,6 @@ public class ViewUserInfo extends RubisHttpServlet
     return Config.ViewUserInfoPoolSize;
   }
 
-  /**
-   * Close both statement and connection to the database.
-   */
-  private void closeConnection(PreparedStatement stmt, Connection conn)
-  {
-    try
-    {
-      if (conn != null)
-        if (conn.getAutoCommit() == false)
-          conn.rollback();
-    }
-    catch (Exception ignore)
-    {
-    }
-    try
-    {
-      if (stmt != null)
-        stmt.close(); // close statement
-    }
-    catch (SQLException e)
-    {
-    }
-    if (conn != null)
-      releaseConnection(conn);
-  }
-
   private boolean commentList(Integer userId, PreparedStatement stmt,
       Connection conn, ServletPrinter sp)
   {
@@ -78,9 +52,8 @@ public class ViewUserInfo extends RubisHttpServlet
       }
       catch (Exception e)
       {
-        sp.printHTML("Failed to execute Query for list of comments: <br>");
-        sp.printHTML("Cause: " + e.toString() + "<br>");
-        sp.printHTML("Message: " + e.getMessage() + "<br>");
+        printError("Failed to execute Query for list of comments.", sp);
+        printException(e, sp);
         conn.rollback();
         closeConnection(stmt, conn);
         return false;
@@ -118,9 +91,8 @@ public class ViewUserInfo extends RubisHttpServlet
         }
         catch (Exception e)
         {
-          sp.printHTML("Failed to execute Query for the comment author: <br>");
-          sp.printHTML("Cause: " + e.toString() + "<br>");
-          sp.printHTML("Message: " + e.getMessage() + "<br>");
+          printError("Failed to execute Query for the comment author.", sp);
+          printException(e, sp);
           conn.rollback();
           authorStmt.close();
           closeConnection(stmt, conn);
@@ -134,7 +106,8 @@ public class ViewUserInfo extends RubisHttpServlet
     }
     catch (Exception e)
     {
-      sp.printHTML("Exception getting comment list: " + e + "<br>");
+      printError("Exception getting comment list.", sp);
+      printException(e, sp);
       try
       {
         conn.rollback();
@@ -143,7 +116,8 @@ public class ViewUserInfo extends RubisHttpServlet
       }
       catch (Exception se)
       {
-        sp.printHTML("Transaction rollback failed: " + e + "<br>");
+        printError("Transaction rollback failed.", sp);
+        printException(e, sp);
         closeConnection(stmt, conn);
         return false;
       }
@@ -168,18 +142,16 @@ public class ViewUserInfo extends RubisHttpServlet
     Connection conn = null;
 
     sp = new ServletPrinter(response, "ViewUserInfo");
-
+    sp.printHTMLheader("RUBiS: View user information");
+    
     if ((value == null) || (value.equals("")))
     {
-      sp.printHTMLheader("RUBiS ERROR: View user information");
-      sp.printHTML("<h3>You must provide a user identifier !<br></h3>");
+      printError("You must provide a user identifier!", sp);
       sp.printHTMLfooter();
       return;
     }
     else
       userId = new Integer(value);
-
-    sp.printHTMLheader("RUBiS: View user information");
 
     // Try to find the user corresponding to the userId
     try
@@ -192,9 +164,8 @@ public class ViewUserInfo extends RubisHttpServlet
     }
     catch (Exception e)
     {
-      sp.printHTML("Failed to execute Query for user: <br>");
-      sp.printHTML("Cause: " + e.toString() + "<br>");
-      sp.printHTML("Message: " + e.getMessage() + "<br>");
+      printError("Failed to execute Query for user.", sp);
+      printException(e, sp);
       closeConnection(stmt, conn);
       sp.printHTMLfooter();
       return;
@@ -203,7 +174,7 @@ public class ViewUserInfo extends RubisHttpServlet
     {
       if (!rs.first())
       {
-        sp.printHTML("<h2>This user does not exist!</h2>");
+        printError("This user does not exist!", sp);
         closeConnection(stmt, conn);
         sp.printHTMLfooter();
         return;
@@ -227,9 +198,10 @@ public class ViewUserInfo extends RubisHttpServlet
       sp.printHTML(result);
 
     }
-    catch (SQLException s)
+    catch (Exception e)
     {
-      sp.printHTML("Failed to get general information about the user: " + s);
+      printError("Failed to get general information about the user.", sp);
+      printException(e, sp);
       closeConnection(stmt, conn);
       sp.printHTMLfooter();
       return;

@@ -29,37 +29,6 @@ public class ViewItem extends RubisHttpServlet
     return Config.ViewItemPoolSize;
   }
 
-/**
- * Close both statement and connection to the database.
- */
-  private void closeConnection(PreparedStatement stmt, Connection conn)
-  {
-    try
-    {
-      if (stmt != null)
-        stmt.close(); // close statement
-      if (conn != null)
-        releaseConnection(conn);
-    }
-    catch (Exception ignore)
-    {
-    }
-  }
-
-/**
- * Display an error message.
- * @param errorMsg the error message value
- */
-  private void printError(String errorMsg, ServletPrinter sp)
-  {
-    sp.printHTMLheader("RUBiS ERROR: View item");
-    sp.printHTML(
-      "<h2>We cannot process your request due to the following error :</h2><br>");
-    sp.printHTML(errorMsg);
-    sp.printHTMLfooter();
-    
-  }
-
   public void doGet(HttpServletRequest request, HttpServletResponse response)
     throws IOException, ServletException
   {
@@ -68,12 +37,15 @@ public class ViewItem extends RubisHttpServlet
     Connection conn = null;
     
     sp = new ServletPrinter(response, "ViewItem");
+    sp.printHTMLheader("RUBiS: View item");
+    
     ResultSet rs = null;
 
     String value = request.getParameter("itemId");
     if ((value == null) || (value.equals("")))
     {
-      printError("No item identifier received - Cannot process the request<br>", sp);
+      printError("No item identifier received - Cannot process the request.", sp);
+      sp.printHTMLfooter();
       return;
     }
     Integer itemId = new Integer(value);
@@ -88,9 +60,9 @@ public class ViewItem extends RubisHttpServlet
     }
     catch (Exception e)
     {
-      sp.printHTML("Failed to execute Query for item: <br>");
-      sp.printHTML("Cause: " + e.toString() + "<br>");
-      sp.printHTML("Message: " + e.getMessage() + "<br>");
+      printError("Failed to execute Query for item.", sp);
+      printException(e, sp);
+      sp.printHTMLfooter();
       closeConnection(stmt, conn);
       return;
     }
@@ -117,7 +89,8 @@ public class ViewItem extends RubisHttpServlet
     {
       if (!rs.first())
       {
-        sp.printHTML("<h2>This item does not exist!</h2>");
+        printError("This item does not exist!", sp);
+        sp.printHTMLfooter();
         closeConnection(stmt, conn);
         return;
       }
@@ -160,9 +133,11 @@ public class ViewItem extends RubisHttpServlet
         sellerStmt.close();
 
       }
-      catch (SQLException e)
+      catch (Exception e)
       {
-        sp.printHTML("Failed to executeQuery for seller: " + e);
+        printError("Failed to executeQuery for seller.", sp);
+        printException(e, sp);
+        sp.printHTMLfooter();
         sellerStmt.close();
         closeConnection(stmt, conn);
         return;
@@ -186,7 +161,11 @@ public class ViewItem extends RubisHttpServlet
     }
     catch (Exception e)
     {
-      printError("Exception getting item list: " + e + "<br>", sp);
+      printError("Exception getting item list.", sp);
+      printException(e, sp);
+      sp.printHTMLfooter();
+      closeConnection(stmt, conn);
+      return;
     }
     closeConnection(stmt, conn);
     sp.printHTMLfooter();
