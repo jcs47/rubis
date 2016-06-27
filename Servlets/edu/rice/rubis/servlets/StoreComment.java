@@ -58,7 +58,7 @@ public class StoreComment extends RubisHttpServlet
     sp.printHTMLheader("RUBiS: Comment posting");
     
     /* Get and check all parameters */
-
+    
     String value = request.getParameter("to");
     if ((value == null) || (value.equals("")))
     {
@@ -173,10 +173,10 @@ public class StoreComment extends RubisHttpServlet
       }
       sp.printHTML(
         "<center><h2>Your comment has been successfully posted.</h2></center>");
-
-      sp.printHTMLfooter();
+      
       conn.commit();
-
+      sp.printHTMLfooter();
+      closeConnection(stmt, conn);
     }
     catch (Exception e)
     {

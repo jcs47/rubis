@@ -285,6 +285,8 @@ public abstract class RubisHttpServlet extends HttpServlet
     }
     catch (Exception e)
     {
+        System.out.println("[RubisHttpServlet.closeConnection] Exception:"); 
+        e.printStackTrace(System.out);
     }
     try
     {
@@ -293,7 +295,8 @@ public abstract class RubisHttpServlet extends HttpServlet
     }
     catch (SQLException e)
     {
-
+        System.out.println("[RubisHttpServlet.closeConnection] SQLException:"); 
+        e.printStackTrace(System.out);
     }
     if (conn != null)
       releaseConnection(conn);
