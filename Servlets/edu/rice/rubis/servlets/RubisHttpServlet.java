@@ -134,7 +134,7 @@ public abstract class RubisHttpServlet extends HttpServlet
    * 
    * @param connection to close
    */
-  public void closeConnection(Connection connection)
+  private void closeConnection(Connection connection)
   {
     try
     {
@@ -204,7 +204,7 @@ public abstract class RubisHttpServlet extends HttpServlet
    * 
    * @param c the connection to release
    */
-  public synchronized void releaseConnection(Connection c)
+  private synchronized void releaseConnection(Connection c)
   {  
     if (enablePooling)
     {
@@ -276,29 +276,19 @@ public abstract class RubisHttpServlet extends HttpServlet
  * Close both statement and connection.
  */
   public void closeConnection(PreparedStatement stmt, Connection conn)
-  {
-    try
     {
-      if (conn != null)
-        if (conn.getAutoCommit() == false)
-          conn.rollback();
-    }
-    catch (Exception e)
-    {
-        System.out.println("[RubisHttpServlet.closeConnection] Exception:"); 
-        e.printStackTrace(System.out);
-    }
     try
     {
       if (stmt != null)
         stmt.close(); // close statement
+      if (conn != null)
+        releaseConnection(conn);
+
     }
-    catch (SQLException e)
+     catch (Exception e)
     {
-        System.out.println("[RubisHttpServlet.closeConnection] SQLException:"); 
+        System.out.println("[RubisHttpServlet.closeConnection] Exception:"); 
         e.printStackTrace(System.out);
     }
-    if (conn != null)
-      releaseConnection(conn);
   }
 }

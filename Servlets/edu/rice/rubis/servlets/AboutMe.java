@@ -786,7 +786,7 @@ public class AboutMe extends RubisHttpServlet
       {
         printError("You don't have an account on RUBiS! You have to register first.", sp);
         sp.printHTMLfooter();
-        closeConnection(conn);
+        closeConnection(stmt, conn);
         return;
       }
       userId = new Integer(id);
