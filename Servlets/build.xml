@@ -26,7 +26,9 @@
   <path id="base.classpath">
     <pathelement location="${classes.dir}" />
     <fileset dir="${j2ee}/lib">
+    </fileset>
 
+    <fileset dir="${web.dir}/WEB-INF/lib">
     </fileset>
   </path>
 
