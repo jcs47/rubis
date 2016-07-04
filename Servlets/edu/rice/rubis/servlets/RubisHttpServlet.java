@@ -172,7 +172,7 @@ public abstract class RubisHttpServlet extends HttpServlet
       
 
         Connection c = (Connection) freeConnections.pop();
-        c.setAutoCommit(true); // reset connection status
+        c.setAutoCommit(false); // reset connection status
         return c;
       }
       catch (Exception e)
@@ -281,9 +281,12 @@ public abstract class RubisHttpServlet extends HttpServlet
     {
       if (stmt != null)
         stmt.close(); // close statement
-      if (conn != null)
+      if (conn != null) {
+          
+        conn.commit();
         releaseConnection(conn);
-
+        
+      }
     }
      catch (Exception e)
     {
