@@ -4,10 +4,13 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.Arrays;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import lasige.steeldb.jdbc.BFTPreparedStatement;
+import merkletree.TreeCertificate;
 
 /** Builds the html page with the list of all region in the database */
 public class BrowseRegions extends RubisHttpServlet
@@ -64,6 +67,17 @@ public class BrowseRegions extends RubisHttpServlet
       }
       while (rs.next());
       closeConnection(stmt, conn);
+      
+      TreeCertificate[] cert  = ((BFTPreparedStatement) stmt).getCertificates();
+      
+       if (cert != null) {
+          for (TreeCertificate c : cert) {
+              
+              if (c != null) {
+                sp.printHTML("<p> " + c.toString() + "</p>");
+              }
+          }
+      }
 
     }
     catch (Exception e)

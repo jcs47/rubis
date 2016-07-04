@@ -9,6 +9,8 @@ import java.sql.SQLException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import lasige.steeldb.jdbc.BFTPreparedStatement;
+import merkletree.TreeCertificate;
 
 /** Builds the html page with the list of all categories and provides links to browse all
     items in a category or items in a category for a given region */
@@ -148,6 +150,20 @@ public class BrowseCategories extends RubisHttpServlet
     boolean connAlive = categoryList(regionId, userId, stmt, conn, sp);
     if (connAlive) {
         closeConnection(stmt, conn);
+
+        if (stmt != null) {
+           TreeCertificate[] cert  = ((BFTPreparedStatement) stmt).getCertificates();
+
+           if (cert != null) {
+
+              for (TreeCertificate c : cert) {
+
+                  if (c != null) {
+                    sp.printHTML("<p> " + c.toString() + "</p>");
+                  }
+              }
+           }
+        }
     }
     sp.printHTMLfooter();
 
