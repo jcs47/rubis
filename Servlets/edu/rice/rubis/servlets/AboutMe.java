@@ -9,6 +9,8 @@ import java.sql.SQLException;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import lasige.steeldb.jdbc.BFTPreparedStatement;
+import merkletree.TreeCertificate;
 
 /**
  * This servlets displays general information about the user loged in
@@ -865,10 +867,25 @@ public class AboutMe extends RubisHttpServlet
         connAlive = listComment(userId, stmt, conn, sp);
     }
 
-    sp.printHTMLfooter();
     if (connAlive) {
         closeConnection(stmt, conn);
     }
+    
+    TreeCertificate[] cert  = ((BFTPreparedStatement) stmt).getCertificates();
+
+    sp.printHTML("<p>Certificates:</p>");
+
+    if (cert != null) {
+
+       for (TreeCertificate c : cert) {
+
+           if (c != null) {
+             sp.printHTML("<p> " + c.toString() + "</p>");
+           }
+       }
+    }
+
+    sp.printHTMLfooter();
   }
 
   /**
