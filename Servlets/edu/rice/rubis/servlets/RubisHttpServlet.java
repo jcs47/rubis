@@ -30,7 +30,9 @@ import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.EmptyStackException;
 import java.util.Properties;
 import java.util.Stack;
@@ -38,6 +40,8 @@ import java.util.Stack;
 import javax.servlet.ServletException;
 import javax.servlet.UnavailableException;
 import javax.servlet.http.HttpServlet;
+import lasige.steeldb.jdbc.BFTPreparedStatement;
+import merkletree.TreeCertificate;
 
 /**
  * Provides the method to initialize connection to the database. All the
@@ -50,28 +54,21 @@ public abstract class RubisHttpServlet extends HttpServlet
   /** Stack of available connections (pool) */
   private Stack      freeConnections = null;
   private int        poolSize;
-  private Properties dbProperties    = null;
+  private static Properties dbProperties    = null;
 
   public abstract int getPoolSize(); // Get the pool size for this class
 
   /** Load the driver and get a connection to the database */
+  @Override
   public void init() throws ServletException
   {
-    InputStream in = null;
+
     poolSize = getPoolSize();
     try
     {
       // Get the properties for the database connection
-      dbProperties = new Properties();
-      in = new FileInputStream(Config.DatabaseProperties);
-      dbProperties.load(in);
-
-        // This is necessary for SteelDB
-        System.setProperty("divdb.folder", "/home/snake/Desktop/git/steeldb/config");
+      initProperties();
       
-        // load the driver
-      Class.forName(dbProperties.getProperty("datasource.classname"));
-
       freeConnections = new Stack();
       initializeConnections();
     }
@@ -94,17 +91,6 @@ public abstract class RubisHttpServlet extends HttpServlet
     {
       throw new UnavailableException("Couldn't get database connection: " + s
           + "<br>");
-    }
-    finally
-    {
-      try
-      {
-        if (in != null)
-          in.close();
-      }
-      catch (Exception e)
-      {
-      }
     }
   }
 
@@ -293,5 +279,163 @@ public abstract class RubisHttpServlet extends HttpServlet
         System.out.println("[RubisHttpServlet.closeConnection] Exception:"); 
         e.printStackTrace(System.out);
     }
+  }
+  
+  private static Connection cache = null; 
+  
+  public static Properties getDBProperties() {
+      return dbProperties;
+  }
+  
+  public static void initProperties() throws FileNotFoundException, IOException, ClassNotFoundException {
+
+      if (dbProperties == null) {
+      
+        InputStream in = null;
+
+        dbProperties = new Properties();
+        in = new FileInputStream(Config.DatabaseProperties);
+        dbProperties.load(in);
+        
+        in.close();
+      }
+  }
+  
+  public static Connection getCache() throws SQLException, ClassNotFoundException, IOException {
+      if (cache == null) {
+
+          loadCache();
+      }
+      return cache;
+  }
+  
+  public static void loadCache() throws SQLException, ClassNotFoundException, IOException {
+      
+      initProperties();
+                
+      if (cache == null) {
+          Class.forName("org.apache.derby.jdbc.EmbeddedDriver");
+          cache = DriverManager.getConnection("jdbc:derby:memory:myCache;create=true");
+
+          Connection db = DriverManager.getConnection(
+            dbProperties.getProperty("datasource.url"),
+            dbProperties.getProperty("datasource.username"),
+            dbProperties.getProperty("datasource.password"));
+
+          db.setAutoCommit(false);
+          
+          Statement s = cache.createStatement();
+          s.executeUpdate("CREATE TABLE roots (timestamp BIGINT, replica INT, index INT, value VARCHAR (20) FOR BIT DATA NOT NULL)");
+          s.close();
+          
+          s = cache.createStatement();
+          s.executeUpdate("CREATE TABLE signatures (timestamp BIGINT, replica INT, value VARCHAR (128) FOR BIT DATA NOT NULL)");
+          s.close();
+          
+          s = cache.createStatement();
+          s.executeUpdate("CREATE TABLE categories (id INT, name VARCHAR(50), certificate BIGINT, index INT)");
+          s.close();
+
+          PreparedStatement stmt = db.prepareStatement("SELECT name, id FROM categories", ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+          ResultSet rs = stmt.executeQuery();
+        
+          db.commit();
+          
+          TreeCertificate[] cert  = ((BFTPreparedStatement) stmt).getCertificates();
+          
+
+           if (cert != null) {
+
+              for (TreeCertificate c : cert) {
+
+                  if (c != null) {
+                      
+                      stmt = cache.prepareStatement("INSERT INTO signatures VALUES (" + c.getTimestamp() + "," + c.getId() + ",?)");
+                      stmt.setBytes(1, c.getSignature());
+                      stmt.executeUpdate();
+                      stmt.close();
+
+                      int index = 0;
+                      for (byte[] r : c.getRoots()) {
+                      
+                        stmt = cache.prepareStatement("INSERT INTO roots VALUES (" + c.getTimestamp() + "," + c.getId() + "," + index + ",?)");
+                        stmt.setBytes(1, r);
+                        stmt.executeUpdate();
+                        stmt.close();
+                        
+                        index++;
+                      }
+                  }
+              }
+           }
+           
+          String categoryName;
+          int categoryId, index = 0;
+          
+          while (rs.next() && cert != null && cert.length > 0)
+          {
+            categoryName = rs.getString("name");
+            categoryId = rs.getInt("id");
+
+            s = cache.createStatement();
+            s.executeUpdate("INSERT INTO categories VALUES (" + categoryId + ",'" + categoryName + "'," + cert[0].getTimestamp() + "," + index + ")");
+            s.close();
+            
+            index++;
+          }
+      
+          s = cache.createStatement();
+          s.executeUpdate("CREATE TABLE regions (id INT, name VARCHAR(25), certificate BIGINT, index INT)");
+          s.close();
+
+          stmt = db.prepareStatement("SELECT name, id FROM regions", ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+          rs = stmt.executeQuery();
+        
+          db.commit();
+          
+          cert  = ((BFTPreparedStatement) stmt).getCertificates();
+          
+
+           if (cert != null) {
+
+              for (TreeCertificate c : cert) {
+
+                  if (c != null) {
+                      
+                      stmt = cache.prepareStatement("INSERT INTO signatures VALUES (" + c.getTimestamp() + "," + c.getId() + ",?)");
+                      stmt.setBytes(1, c.getSignature());
+                      stmt.executeUpdate();
+                      stmt.close();
+
+                      index = 0;
+                      for (byte[] r : c.getRoots()) {
+                      
+                        stmt = cache.prepareStatement("INSERT INTO roots VALUES (" + c.getTimestamp() + "," + c.getId() + "," + index + ",?)");
+                        stmt.setBytes(1, r);
+                        stmt.executeUpdate();
+                        stmt.close();
+                        
+                        index++;
+                      }
+                  }
+              }
+           }
+           
+          index = 0;
+          
+          while (rs.next() && cert != null && cert.length > 0)
+          {
+            categoryName = rs.getString("name");
+            categoryId = rs.getInt("id");
+
+            s = cache.createStatement();
+            s.executeUpdate("INSERT INTO regions VALUES (" + categoryId + ",'" + categoryName + "'," + cert[0].getTimestamp() + "," + index + ")");
+            s.close();
+            
+            index++;
+          }
+
+          db.close();
+      }
   }
 }

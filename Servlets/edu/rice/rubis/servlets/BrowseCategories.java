@@ -35,8 +35,20 @@ public class BrowseCategories extends RubisHttpServlet
     // get the list of categories
     try
     {
-      stmt = conn.prepareStatement("SELECT name, id FROM categories", ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+        
+      String sql = "SELECT name, id FROM categories";
+      
+      stmt = getCache().prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
       rs = stmt.executeQuery();
+      
+      if (rs.first()) {
+          sp.printHTML("Successfully fetched from cache!");
+      }
+      else {
+        sp.printHTML("Fetching from database");
+        stmt = conn.prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+        rs = stmt.executeQuery();
+      }
     }
     catch (Exception e)
     {
@@ -150,20 +162,7 @@ public class BrowseCategories extends RubisHttpServlet
     boolean connAlive = categoryList(regionId, userId, stmt, conn, sp);
     if (connAlive) {
         closeConnection(stmt, conn);
-
-        if (stmt != null) {
-           TreeCertificate[] cert  = ((BFTPreparedStatement) stmt).getCertificates();
-
-           if (cert != null) {
-
-              for (TreeCertificate c : cert) {
-
-                  if (c != null) {
-                    sp.printHTML("<p> " + c.toString() + "</p>");
-                  }
-              }
-           }
-        }
+        
     }
     sp.printHTMLfooter();
 

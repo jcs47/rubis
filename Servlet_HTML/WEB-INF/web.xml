@@ -213,6 +213,10 @@
       <url-pattern>servlet/edu.rice.rubis.servlets.ViewUserInfo</url-pattern>
     </servlet-mapping>
 
+	<listener>
+	   <listener-class>edu.rice.rubis.servlets.Listener</listener-class>
+	</listener>
+
     <session-config>
       <session-timeout>30</session-timeout>    <!-- 30 minutes -->
     </session-config>
