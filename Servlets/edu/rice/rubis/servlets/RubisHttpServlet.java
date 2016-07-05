@@ -311,12 +311,15 @@ public abstract class RubisHttpServlet extends HttpServlet
   
   public static void loadCache() throws SQLException, ClassNotFoundException, IOException {
       
-      initProperties();
+      initProperties(); //initialize main db properties
                 
       if (cache == null) {
+          
+          //create cache database
           Class.forName("org.apache.derby.jdbc.EmbeddedDriver");
           cache = DriverManager.getConnection("jdbc:derby:memory:myCache;create=true");
 
+          // fetch connection with main database
           Connection db = DriverManager.getConnection(
             dbProperties.getProperty("datasource.url"),
             dbProperties.getProperty("datasource.username"),
@@ -324,6 +327,7 @@ public abstract class RubisHttpServlet extends HttpServlet
 
           db.setAutoCommit(false);
           
+          // create tables for certificates
           Statement s = cache.createStatement();
           s.executeUpdate("CREATE TABLE roots (timestamp BIGINT, replica INT, index INT, value VARCHAR (20) FOR BIT DATA NOT NULL)");
           s.close();
@@ -332,6 +336,7 @@ public abstract class RubisHttpServlet extends HttpServlet
           s.executeUpdate("CREATE TABLE signatures (timestamp BIGINT, replica INT, value VARCHAR (128) FOR BIT DATA NOT NULL)");
           s.close();
           
+          // create pre-fetched tables for categories
           s = cache.createStatement();
           s.executeUpdate("CREATE TABLE categories (id INT, name VARCHAR(50), certificate BIGINT, index INT)");
           s.close();
@@ -339,10 +344,10 @@ public abstract class RubisHttpServlet extends HttpServlet
           PreparedStatement stmt = db.prepareStatement("SELECT name, id FROM categories", ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
           ResultSet rs = stmt.executeQuery();
         
-          db.commit();
+          db.commit(); // commit and received certificates
           
-          TreeCertificate[] cert  = ((BFTPreparedStatement) stmt).getCertificates();
-          
+          // store certificates for categories
+          TreeCertificate[] cert  = ((BFTPreparedStatement) stmt).getCertificates();          
 
            if (cert != null) {
 
@@ -369,6 +374,7 @@ public abstract class RubisHttpServlet extends HttpServlet
               }
            }
            
+          // store rows for categories in cache
           String categoryName;
           int categoryId, index = 0;
           
@@ -384,6 +390,7 @@ public abstract class RubisHttpServlet extends HttpServlet
             index++;
           }
       
+          // create pre-fetched tables for regions
           s = cache.createStatement();
           s.executeUpdate("CREATE TABLE regions (id INT, name VARCHAR(25), certificate BIGINT, index INT)");
           s.close();
@@ -391,8 +398,9 @@ public abstract class RubisHttpServlet extends HttpServlet
           stmt = db.prepareStatement("SELECT name, id FROM regions", ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
           rs = stmt.executeQuery();
         
-          db.commit();
+          db.commit(); // commit and received certificates
           
+          // store certificates for regions
           cert  = ((BFTPreparedStatement) stmt).getCertificates();
           
 
@@ -421,6 +429,7 @@ public abstract class RubisHttpServlet extends HttpServlet
               }
            }
            
+          // store rows for regions in cache
           index = 0;
           
           while (rs.next() && cert != null && cert.length > 0)
