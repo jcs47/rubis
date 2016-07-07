@@ -105,7 +105,7 @@ public class BrowseCategories extends RubisHttpServlet
           stmt = getCache().prepareStatement("SELECT name, id from categories", ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
           rs = stmt.executeQuery();
           
-          sp.printHTML("<h3>Re-creating first branches from result set getched from cache (table 'categories')</h3>");
+          sp.printHTML("<h3>Re-creating first branches from result set fetched from cache (table 'categories')</h3>");
           JSONArray json = TreeCertificate.getJSON((new ResultSetData(rs)).getRows());
           //sp.printHTML("<p>JSON format: " + json + "</p>");
           //sp.printHTML("<p>Branches:</p>");
