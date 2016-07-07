@@ -5,6 +5,7 @@ import java.net.URLEncoder;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Timestamp;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -55,11 +56,12 @@ public class SearchItemsByCategory extends RubisHttpServlet
 
       stmt =
         conn.prepareStatement(
-          "SELECT items.name, items.id, items.end_date, items.max_bid, items.nb_of_bids, items.initial_price FROM items WHERE items.category=? AND end_date>=NOW() ORDER BY items.end_date ASC LIMIT ? OFFSET ?",
+          "SELECT items.name, items.id, items.end_date, items.max_bid, items.nb_of_bids, items.initial_price, items.category, users.region FROM items, users WHERE items.category=? AND items.seller=users.id AND end_date>= ? ORDER BY items.end_date ASC LIMIT ? OFFSET ?",
 		ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
       stmt.setInt(1, categoryId.intValue());
-      stmt.setInt(2, nbOfItems);
-      stmt.setInt(3, page * nbOfItems);
+      stmt.setTimestamp(2, new Timestamp(System.currentTimeMillis()));
+      stmt.setInt(3, nbOfItems);
+      stmt.setInt(4, page * nbOfItems);
       rs = stmt.executeQuery();
     }
     catch (Exception e)
