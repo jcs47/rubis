@@ -516,8 +516,44 @@ public abstract class RubisHttpServlet extends HttpServlet
             
             position++;
           }
+          
+          db.close(); //close DB connection          
+          
+          // create table for items
+          s = cache.createStatement();
+          s.executeUpdate("CREATE TABLE items (\n" +
+            "   id            INT,\n" +
+            "   name          VARCHAR(100),\n" +
+            "   description   LONG VARCHAR,\n" +
+            "   initial_price FLOAT NOT NULL,\n" +
+            "   quantity      INT NOT NULL,\n" +
+            "   reserve_price FLOAT DEFAULT 0,\n" +
+            "   buy_now       FLOAT DEFAULT 0,\n" +
+            "   nb_of_bids    INT DEFAULT 0,\n" +
+            "   max_bid       FLOAT DEFAULT 0,\n" +
+            "   start_date    TIMESTAMP,\n" +
+            "   end_date      TIMESTAMP,\n" +
+            "   seller        INT NOT NULL,\n" +
+            "   category      INT NOT NULL,\n" +
+            "   PRIMARY KEY(id)\n" +
+            ")");
+          s.close();
 
-          db.close();
+          // create table for found items
+          s = cache.createStatement();
+          s.executeUpdate("CREATE TABLE found_items (\n" +
+            "   id            INT,\n" +
+            "   name          VARCHAR(100),\n" +
+            "   end_date      TIMESTAMP,\n" +
+            "   initial_price FLOAT NOT NULL,\n" +
+            "   nb_of_bids    INT DEFAULT 0,\n" +
+            "   max_bid       FLOAT DEFAULT 0,\n" +
+            "   seller        INT NOT NULL,\n" +
+            "   category      INT NOT NULL,\n" +
+            "   region      INT NOT NULL,\n" +
+            "   PRIMARY KEY(id)\n" +
+            ")");
+          s.close();
       }
   }
 }
