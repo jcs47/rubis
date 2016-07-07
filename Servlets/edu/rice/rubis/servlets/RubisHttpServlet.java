@@ -521,37 +521,41 @@ public abstract class RubisHttpServlet extends HttpServlet
           
           // create table for items
           s = cache.createStatement();
-          s.executeUpdate("CREATE TABLE items (\n" +
-            "   id            INT,\n" +
-            "   name          VARCHAR(100),\n" +
-            "   description   LONG VARCHAR,\n" +
-            "   initial_price FLOAT NOT NULL,\n" +
-            "   quantity      INT NOT NULL,\n" +
-            "   reserve_price FLOAT DEFAULT 0,\n" +
-            "   buy_now       FLOAT DEFAULT 0,\n" +
-            "   nb_of_bids    INT DEFAULT 0,\n" +
-            "   max_bid       FLOAT DEFAULT 0,\n" +
-            "   start_date    TIMESTAMP,\n" +
-            "   end_date      TIMESTAMP,\n" +
-            "   seller        INT NOT NULL,\n" +
-            "   category      INT NOT NULL,\n" +
-            "   PRIMARY KEY(id)\n" +
+          s.executeUpdate("CREATE TABLE items (" +
+            "   id            INT," +
+            "   name          VARCHAR(100)," +
+            "   description   LONG VARCHAR," +
+            "   initial_price FLOAT NOT NULL," +
+            "   quantity      INT NOT NULL," +
+            "   reserve_price FLOAT DEFAULT 0," +
+            "   buy_now       FLOAT DEFAULT 0," +
+            "   nb_of_bids    INT DEFAULT 0," +
+            "   max_bid       FLOAT DEFAULT 0," +
+            "   start_date    TIMESTAMP," +
+            "   end_date      TIMESTAMP," +
+            "   seller        INT NOT NULL," +
+            "   category      INT NOT NULL," +
+            "   position      INT," +
+            "   index         INT," +
+            "   PRIMARY KEY(id)" +
             ")");
           s.close();
 
           // create table for found items
           s = cache.createStatement();
-          s.executeUpdate("CREATE TABLE found_items (\n" +
-            "   id            INT,\n" +
-            "   name          VARCHAR(100),\n" +
-            "   end_date      TIMESTAMP,\n" +
-            "   initial_price FLOAT NOT NULL,\n" +
-            "   nb_of_bids    INT DEFAULT 0,\n" +
-            "   max_bid       FLOAT DEFAULT 0,\n" +
-            "   seller        INT NOT NULL,\n" +
-            "   category      INT NOT NULL,\n" +
-            "   region      INT NOT NULL,\n" +
-            "   PRIMARY KEY(id)\n" +
+          s.executeUpdate("CREATE TABLE found_items (" +
+            "   id            INT," +
+            "   name          VARCHAR(100)," +
+            "   end_date      TIMESTAMP," +
+            "   initial_price FLOAT NOT NULL," +
+            "   nb_of_bids    INT DEFAULT 0," +
+            "   max_bid       FLOAT DEFAULT 0," +
+            "   seller        INT NOT NULL," +
+            "   category      INT NOT NULL," +
+            "   region        INT NOT NULL," +
+            "   position      INT," +
+            "   index         INT," +
+            "   PRIMARY KEY(id)" +
             ")");
           s.close();
       }
