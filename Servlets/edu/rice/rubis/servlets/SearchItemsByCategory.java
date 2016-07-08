@@ -10,6 +10,8 @@ import java.sql.Timestamp;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import lasige.steeldb.jdbc.BFTPreparedStatement;
+import merkletree.TreeCertificate;
 
 /** This servlets displays a list of items belonging to a specific category.
  * It must be called this way :
@@ -51,19 +53,102 @@ public class SearchItemsByCategory extends RubisHttpServlet
     // get the list of items
     try
     {
-      conn = getConnection();
-      //conn.setAutoCommit(false);
-
-      stmt =
-        conn.prepareStatement(
-          "SELECT items.name, items.id, items.end_date, items.max_bid, items.nb_of_bids, items.initial_price, items.category, users.region FROM items, users WHERE items.category=? AND items.seller=users.id AND end_date>= ? ORDER BY items.end_date ASC LIMIT ? OFFSET ?",
-		ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+        
+      int first = page * nbOfItems;
+      int last = first + nbOfItems;
+      
+        
+      stmt = getCache().prepareStatement("SELECT COUNT(*) AS total FROM items_aux WHERE category = ? AND first_item >= ? AND last_item <= ?");
       stmt.setInt(1, categoryId.intValue());
-      stmt.setTimestamp(2, new Timestamp(System.currentTimeMillis()));
+      stmt.setInt(2, first);
+      stmt.setInt(3, last);
+      
+      rs = stmt.executeQuery();
+      rs.next();
+      
+      int total = rs.getInt("total");
+      
+      rs.close();
+      stmt.close();
+            
+      if (total > 0) {
+          sp.printHTML("Fetching data from cache...");
+                    
+          stmt = getCache().prepareStatement("SELECT found_items.name, found_items.id, found_items.end_date, found_items.max_bid, found_items.nb_of_bids, found_items.initial_price, found_items.category, found_items.seller, found_items.region FROM found_items WHERE found_items.category=? AND found_items.end_date>= ? ORDER BY found_items.end_date ASC { LIMIT ? OFFSET ? }",
+                  ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+
+      } else {
+      
+        sp.printHTML("Fetching data from database...");
+      
+        conn = getConnection();
+        //conn.setAutoCommit(false);
+
+        stmt =
+          conn.prepareStatement(
+            "SELECT items.name, items.id, items.end_date, items.max_bid, items.nb_of_bids, items.initial_price, items.category, items.seller, users.region FROM items, users WHERE items.category=? AND items.seller=users.id AND end_date>= ? ORDER BY items.end_date ASC LIMIT ? OFFSET ?",
+                  ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+      }
+      
+      Timestamp ts = new Timestamp(System.currentTimeMillis());
+      
+      stmt.setInt(1, categoryId.intValue());
+      stmt.setTimestamp(2, ts);
       stmt.setInt(3, nbOfItems);
       stmt.setInt(4, page * nbOfItems);
       rs = stmt.executeQuery();
+                  
+      if (total == 0) {
+          
+           conn.commit();
+
+           // get certificates
+           TreeCertificate[] cert  = ((BFTPreparedStatement) stmt).getCertificates(); 
+      
+           storeSignatures(cert);
+           storeBranches(new Timestamp(cert[0].getTimestamp()), rs, 0);
+
+           PreparedStatement cache = getCache().prepareStatement("INSERT INTO items_aux VALUES(?,?,?,?,?)");
+      
+           cache.setInt(1, first);
+           cache.setInt(2, last);
+           cache.setInt(3, categoryId.intValue());
+           cache.setInt(4, -1);
+           cache.setTimestamp(5, ts);
+           
+           cache.executeUpdate();
+           cache.close();
+           
+          while (rs.next()) {
+              
+              String sql = "INSERT INTO found_items VALUES ("
+                      + rs.getInt("id") + ","
+                      + "'" + rs.getString("name") + "',"
+                      + "?,"
+                      + rs.getFloat("initial_price") + ","
+                      + rs.getInt("nb_of_bids") + ","
+                      + rs.getFloat("max_bid") + ","
+                      + rs.getInt("seller") + ","
+                      + rs.getInt("category") + ","
+                      + rs.getInt("region") + ","
+                      + "?,"
+                      + rs.getRow() + ","
+                      + "0)";
+          
+              //sp.printHTML("<br>" + sql + "<br>");
+              cache = getCache().prepareStatement(sql);
+              cache.setTimestamp(1, rs.getTimestamp("end_date"));
+              cache.setTimestamp(2, new Timestamp(cert[0].getTimestamp()));
+              
+              cache.executeUpdate();
+              cache.close();
+
+          }
+          
+          rs.beforeFirst();
+      }
     }
+    
     catch (Exception e)
     {
       printError("Failed to executeQuery for item.", sp);

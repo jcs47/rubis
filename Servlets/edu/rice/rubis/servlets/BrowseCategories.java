@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Timestamp;
 
 import java.util.LinkedList;
 
@@ -122,9 +123,10 @@ public class BrowseCategories extends RubisHttpServlet
           rs = stmt.executeQuery();
           
           rs.next();
-          long ts = rs.getLong("timestamp");
+          Timestamp ts = rs.getTimestamp("timestamp");
           
-          stmt = getCache().prepareStatement("SELECT * from branches WHERE timestamp = " +  ts + " AND index = 0 ORDER BY position", ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+          stmt = getCache().prepareStatement("SELECT * from branches WHERE timestamp = ? AND index = 0 ORDER BY position", ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+          stmt.setTimestamp(1, ts);
           rs = stmt.executeQuery();
           
           rs.last();
@@ -153,11 +155,12 @@ public class BrowseCategories extends RubisHttpServlet
           }
           
 
-          stmt = getCache().prepareStatement("SELECT * FROM signatures WHERE timestamp = " + ts, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+          stmt = getCache().prepareStatement("SELECT * FROM signatures WHERE timestamp = ?", ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+          stmt.setTimestamp(1, ts);
           rs = stmt.executeQuery();
           while (rs.next()) {
           
-            byte[] buffer = TreeCertificate.concatenate(rs.getInt("replica"), ts, l);
+            byte[] buffer = TreeCertificate.concatenate(rs.getInt("replica"), ts.getTime(), l);
             boolean verify = TOMUtil.verifySignature(getReplicaKey(rs.getInt("replica")), buffer, rs.getBytes("value"));
             //sp.printHTML("<p>Concatenation from replica " + rs.getInt("replica") + ": " + Arrays.toString(buffer) + "</p>");
             

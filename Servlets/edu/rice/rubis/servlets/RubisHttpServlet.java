@@ -39,6 +39,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 
 import java.util.HashMap;
 import java.util.Properties;
@@ -383,16 +384,16 @@ public abstract class RubisHttpServlet extends HttpServlet
           int position;
           
           Statement s = cache.createStatement();
-          s.executeUpdate("CREATE TABLE signatures (timestamp BIGINT, replica INT, value VARCHAR (128) FOR BIT DATA NOT NULL)");
+          s.executeUpdate("CREATE TABLE signatures (timestamp TIMESTAMP, replica INT, value VARCHAR (128) FOR BIT DATA NOT NULL)");
           s.close();
           
           s = cache.createStatement();
-          s.executeUpdate("CREATE TABLE branches (timestamp BIGINT, position INT, index INT, value VARCHAR (20) FOR BIT DATA NOT NULL)");
+          s.executeUpdate("CREATE TABLE branches (timestamp TIMESTAMP, position INT, index INT, value VARCHAR (20) FOR BIT DATA NOT NULL)");
           s.close();
 
           // create pre-fetched tables for categories
           s = cache.createStatement();
-          s.executeUpdate("CREATE TABLE categories (id INT, name VARCHAR(50), timestamp BIGINT, position INT, index INT)");
+          s.executeUpdate("CREATE TABLE categories (id INT, name VARCHAR(50), timestamp TIMESTAMP, position INT, index INT)");
           s.close();
 
           PreparedStatement stmt = db.prepareStatement("SELECT name, id FROM categories", ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
@@ -402,39 +403,10 @@ public abstract class RubisHttpServlet extends HttpServlet
           
           // store certificates for categories
           TreeCertificate[] cert  = ((BFTPreparedStatement) stmt).getCertificates();          
-
-           if (cert != null) {
-
-              for (TreeCertificate c : cert) {
-
-                  if (c != null) {
-                      
-                      stmt = cache.prepareStatement("INSERT INTO signatures VALUES (" + c.getTimestamp() + "," + c.getId() + ",?)");
-                      stmt.setBytes(1, c.getSignature());
-                      stmt.executeUpdate();
-                      stmt.close();
-
-                  }
-              }
-              
-              // store first level branches
-              JSONArray json = TreeCertificate.getJSON((new ResultSetData(rs)).getRows());
-              MerkleTree[] branches = TreeCertificate.getFirstLevel(TreeCertificate.jsonToLeafs(json));
-              
-              if (cert[0] != null) {
-                position = 0;
-                for (MerkleTree b : branches) {
-              
-                    stmt = cache.prepareStatement("INSERT INTO branches VALUES (" + cert[0].getTimestamp() + "," + position + ",0,?)");
-                    stmt.setBytes(1, b.digest());
-                    stmt.executeUpdate();
-                    stmt.close();
-              
-                    position++;
-                }
-              }
-           }
-           
+          
+          storeSignatures(cert);
+          storeBranches(new Timestamp(cert[0].getTimestamp()), rs, 0);
+          
           // store rows for categories in cache
           String categoryName;
           int categoryId;
@@ -446,16 +418,17 @@ public abstract class RubisHttpServlet extends HttpServlet
             categoryName = rs.getString("name");
             categoryId = rs.getInt("id");
 
-            s = cache.createStatement();
-            s.executeUpdate("INSERT INTO categories VALUES (" + categoryId + ",'" + categoryName + "'," + cert[0].getTimestamp() + "," + position + ",0)");
-            s.close();
+            stmt = cache.prepareStatement("INSERT INTO categories VALUES (" + categoryId + ",'" + categoryName + "',?," + position + ",0)");
+            stmt.setTimestamp(1, new Timestamp(cert[0].getTimestamp()));
+            stmt.executeUpdate();            
+            stmt.close();
             
             position++;
           }
       
           // create pre-fetched tables for regions
           s = cache.createStatement();
-          s.executeUpdate("CREATE TABLE regions (id INT, name VARCHAR(25), timestamp BIGINT, position INT, index INT)");
+          s.executeUpdate("CREATE TABLE regions (id INT, name VARCHAR(25), timestamp TIMESTAMP, position INT, index INT)");
           s.close();
 
           stmt = db.prepareStatement("SELECT name, id FROM regions", ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
@@ -467,39 +440,8 @@ public abstract class RubisHttpServlet extends HttpServlet
           cert  = ((BFTPreparedStatement) stmt).getCertificates();
           
 
-            if (cert != null) {
-
-               for (TreeCertificate c : cert) {
-
-                   if (c != null) {
-
-                       stmt = cache.prepareStatement("INSERT INTO signatures VALUES (" + c.getTimestamp() + "," + c.getId() + ",?)");
-                       stmt.setBytes(1, c.getSignature());
-                       stmt.executeUpdate();
-                       stmt.close();
-
-                   }
-               }
-              
-              // store first level branches
-              JSONArray json = TreeCertificate.getJSON((new ResultSetData(rs)).getRows());
-              MerkleTree[] branches = TreeCertificate.getFirstLevel(TreeCertificate.jsonToLeafs(json));
-              
-              if (cert[0] != null) {
-                  
-                position = 0;
-                
-                for (MerkleTree b : branches) {
-              
-                    stmt = cache.prepareStatement("INSERT INTO branches VALUES (" + cert[0].getTimestamp() + "," + position + ",0,?)");
-                    stmt.setBytes(1, b.digest());
-                    stmt.executeUpdate();
-                    stmt.close();
-              
-                    position++;
-                }
-              }
-           }
+          storeSignatures(cert);
+          storeBranches(new Timestamp(cert[0].getTimestamp()), rs, 0);
            
           // store rows for regions in cache
           position = 0;
@@ -510,9 +452,10 @@ public abstract class RubisHttpServlet extends HttpServlet
             categoryName = rs.getString("name");
             categoryId = rs.getInt("id");
 
-            s = cache.createStatement();
-            s.executeUpdate("INSERT INTO regions VALUES (" + categoryId + ",'" + categoryName + "'," + cert[0].getTimestamp() + "," + position + ",0)");
-            s.close();
+            stmt = cache.prepareStatement("INSERT INTO regions VALUES (" + categoryId + ",'" + categoryName + "',?," + position + ",0)");
+            stmt.setTimestamp(1, new Timestamp(cert[0].getTimestamp()));
+            stmt.executeUpdate();
+            stmt.close();
             
             position++;
           }
@@ -535,6 +478,7 @@ public abstract class RubisHttpServlet extends HttpServlet
             "   end_date      TIMESTAMP," +
             "   seller        INT NOT NULL," +
             "   category      INT NOT NULL," +
+            "   timestamp     TIMESTAMP," +
             "   position      INT," +
             "   index         INT," +
             "   PRIMARY KEY(id)" +
@@ -553,11 +497,77 @@ public abstract class RubisHttpServlet extends HttpServlet
             "   seller        INT NOT NULL," +
             "   category      INT NOT NULL," +
             "   region        INT NOT NULL," +
+            "   timestamp     TIMESTAMP," +
             "   position      INT," +
             "   index         INT," +
             "   PRIMARY KEY(id)" +
             ")");
           s.close();
+          
+          // create table to help analise queries from SearchitemBy* servlets.
+          s = cache.createStatement();
+          s.executeUpdate("CREATE TABLE items_aux (" +
+            "   first_item      INT NOT NULL," + 
+            "   last_item       INT NOT NULL," + 
+            "   category       INT NOT NULL," +
+            "   region         INT NOT NULL," +
+            "   timestamp      TIMESTAMP" +
+            ")");
+          s.close();
+      }
+  }
+  
+  protected static void storeSignatures(TreeCertificate[] cert) throws SQLException {
+      
+    if (cache != null && cert != null) {
+        
+        PreparedStatement stmt;
+       
+       for (TreeCertificate c : cert) {
+
+           if (c != null) {
+
+               stmt = cache.prepareStatement("INSERT INTO signatures VALUES (?," + c.getId() + ",?)");
+               stmt.setTimestamp(1, new Timestamp(c.getTimestamp()));
+               stmt.setBytes(2, c.getSignature());
+               stmt.executeUpdate();
+               stmt.close();
+
+           }
+       }
+
+       
+    }
+  }
+  
+  protected static void storeBranches(Timestamp ts, ResultSet rs, int index) throws SQLException {
+        
+      if (cache != null && ts != null && rs != null) {
+          
+        int position = 0;
+        PreparedStatement stmt;
+
+        rs.beforeFirst();
+
+         // store first level branches
+         JSONArray json = TreeCertificate.getJSON((new ResultSetData(rs)).getRows());
+         MerkleTree[] branches = TreeCertificate.getFirstLevel(TreeCertificate.jsonToLeafs(json));
+
+         rs.beforeFirst();
+
+         
+        position = 0;
+        for (MerkleTree b : branches) {
+
+            stmt = cache.prepareStatement("INSERT INTO branches VALUES (?," + position + "," + index + ",?)");
+            stmt.setTimestamp(1, ts);
+            stmt.setBytes(2, b.digest());
+            stmt.executeUpdate();
+            stmt.close();
+
+            position++;
+        }
+         
       }
   }
 }
