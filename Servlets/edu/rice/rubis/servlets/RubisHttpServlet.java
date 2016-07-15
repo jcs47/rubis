@@ -477,7 +477,9 @@ public abstract class RubisHttpServlet extends HttpServlet
             "   start_date    TIMESTAMP," +
             "   end_date      TIMESTAMP," +
             "   seller        INT NOT NULL," +
+            "   nickname      VARCHAR(100) NOT NULL," +
             "   category      INT NOT NULL," +
+            "   region        INT NOT NULL," +
             "   timestamp     TIMESTAMP," +
             "   position      INT," +
             "   index         INT," +
@@ -486,7 +488,7 @@ public abstract class RubisHttpServlet extends HttpServlet
           s.close();
 
           // create table for found items
-          s = cache.createStatement();
+          /*s = cache.createStatement();
           s.executeUpdate("CREATE TABLE found_items (" +
             "   id            INT," +
             "   name          VARCHAR(100)," +
@@ -502,7 +504,7 @@ public abstract class RubisHttpServlet extends HttpServlet
             "   index         INT," +
             "   PRIMARY KEY(id)" +
             ")");
-          s.close();
+          s.close();*/
           
           // create table to help analise queries from SearchitemBy* servlets.
           s = cache.createStatement();

@@ -1,14 +1,17 @@
 package edu.rice.rubis.servlets;
 
+import static edu.rice.rubis.servlets.RubisHttpServlet.storeSignatures;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.Timestamp;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import lasige.steeldb.jdbc.BFTPreparedStatement;
+import merkletree.TreeCertificate;
 
 /** This servlets displays the full description of a given item
  * and allows the user to bid on this item.
@@ -48,15 +51,31 @@ public class ViewItem extends RubisHttpServlet
       sp.printHTMLfooter();
       return;
     }
-    Integer itemId = new Integer(value);
+    Integer itemId = new Integer(value);    
+    boolean fromCache = false;
+        
     // get the item
     try
     {
-      conn = getConnection();
-      stmt = conn.prepareStatement("SELECT * FROM items WHERE id=?",
-		ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+      
+      stmt = getCache().prepareStatement("SELECT * FROM items WHERE id= ?", ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
       stmt.setInt(1, itemId.intValue());
       rs = stmt.executeQuery();
+      
+      if (rs.first()) {
+          sp.printHTML("Successfully fetched from cache!");
+          fromCache = true;
+      }
+      else {
+          sp.printHTML("Fetching from database");
+          
+          conn = getConnection();
+          stmt = conn.prepareStatement("SELECT items.name, items.id, items.description, items.initial_price, items.quantity, items.reserve_price, items.buy_now, items.nb_of_bids, items.max_bid, items.start_date, items.end_date, items.seller, items.category, users.nickname, users.region FROM items,users WHERE items.seller=users.id AND id= ?",
+		ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+          stmt.setInt(1, itemId.intValue());
+          rs = stmt.executeQuery();
+      
+      }
     }
     catch (Exception e)
     {
@@ -97,51 +116,103 @@ public class ViewItem extends RubisHttpServlet
       String itemName, endDate, startDate, description, sellerName;
       float maxBid, initialPrice, buyNow, reservePrice;
       int quantity, sellerId, nbOfBids = 0;
+      Timestamp ts_start, ts_end;
+      
       itemName = rs.getString("name");
       description = rs.getString("description");
       endDate = rs.getString("end_date");
+      ts_end = rs.getTimestamp("end_date");
       startDate = rs.getString("start_date");
+      ts_start = rs.getTimestamp("start_date");
       initialPrice = rs.getFloat("initial_price");
       reservePrice = rs.getFloat("reserve_price");
       buyNow = rs.getFloat("buy_now");
       quantity = rs.getInt("quantity");
       sellerId = rs.getInt("seller");
+      sellerName = rs.getString("nickname");
 
       maxBid = rs.getFloat("max_bid");
       nbOfBids = rs.getInt("nb_of_bids");
       if (maxBid < initialPrice)
         maxBid = initialPrice;
-
-      PreparedStatement sellerStmt = null;
-      try
+      
+      int category = rs.getInt("category");
+      int region = rs.getInt("region");
+      int nRow = rs.getRow();
+      
+      if (!fromCache)
       {
-        sellerStmt =
-          conn.prepareStatement("SELECT nickname FROM users WHERE id=?",
-		ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-        sellerStmt.setInt(1, sellerId);
-        ResultSet sellerResult = sellerStmt.executeQuery();
-        // Get the seller's name		 
-        if (sellerResult.first())
-          sellerName = sellerResult.getString("nickname");
-        else
+        
+        conn.commit();
+
+        // get certificates
+        TreeCertificate[] cert  = ((BFTPreparedStatement) stmt).getCertificates(); 
+
+        storeSignatures(cert);
+        storeBranches(new Timestamp(cert[0].getTimestamp()), rs, 0);
+        
+        //PreparedStatement sellerStmt = null;
+        try
+        {         
+          /*sellerStmt =
+            conn.prepareStatement("SELECT nickname FROM users WHERE id=?",
+                  ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+          sellerStmt.setInt(1, sellerId);
+          ResultSet sellerResult = sellerStmt.executeQuery();
+          // Get the seller's name		 
+          if (sellerResult.first())
+            sellerName = sellerResult.getString("nickname");
+          else
+          {
+            sp.printHTML("Unknown seller");
+            sellerStmt.close();
+            closeConnection(stmt, conn);
+            return;
+          }
+          sellerStmt.close();*/
+
+          //store in cache
+          String sql = "INSERT INTO items VALUES ("
+                + rs.getInt("id") + ","
+                + "'" + itemName + "',"
+                + "'" + description + "',"
+                + initialPrice + ","
+                + quantity + ","
+                + reservePrice + ","
+                + buyNow + ","
+                + nbOfBids + ","
+                + maxBid + ","
+                + "?,"
+                + "?,"
+                + sellerId + ","
+                + "'" + sellerName + "',"
+                + category + ","
+                + region + ","
+                + "?,"
+                + nRow + ","
+                + "0)";
+
+          PreparedStatement cache = getCache().prepareStatement(sql);
+          cache.setTimestamp(1, ts_start);
+          cache.setTimestamp(2, ts_end);
+          cache.setTimestamp(3, new Timestamp(cert[0].getTimestamp()));
+
+          cache.executeUpdate();
+          cache.close();
+
+        }
+        catch (Exception e)
         {
-          sp.printHTML("Unknown seller");
-          sellerStmt.close();
+          printError("Failed to executeQuery for seller.", sp);
+          printException(e, sp);
+          sp.printHTMLfooter();
+          //sellerStmt.close();
           closeConnection(stmt, conn);
           return;
         }
-        sellerStmt.close();
-
       }
-      catch (Exception e)
-      {
-        printError("Failed to executeQuery for seller.", sp);
-        printException(e, sp);
-        sp.printHTMLfooter();
-        sellerStmt.close();
-        closeConnection(stmt, conn);
-        return;
-      }
+      
+      
       sp.printItemDescription(
         itemId.intValue(),
         itemName,

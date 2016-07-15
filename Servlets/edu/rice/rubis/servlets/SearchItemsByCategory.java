@@ -74,7 +74,7 @@ public class SearchItemsByCategory extends RubisHttpServlet
       if (total > 0) {
           sp.printHTML("Fetching data from cache...");
                     
-          stmt = getCache().prepareStatement("SELECT found_items.name, found_items.id, found_items.end_date, found_items.max_bid, found_items.nb_of_bids, found_items.initial_price, found_items.category, found_items.seller, found_items.region FROM found_items WHERE found_items.category=? AND found_items.end_date>= ? ORDER BY found_items.end_date ASC { LIMIT ? OFFSET ? }",
+          stmt = getCache().prepareStatement("SELECT * FROM items WHERE category= ? AND end_date>= ? ORDER BY end_date ASC { LIMIT ? OFFSET ? }",
                   ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
 
       } else {
@@ -86,7 +86,7 @@ public class SearchItemsByCategory extends RubisHttpServlet
 
         stmt =
           conn.prepareStatement(
-            "SELECT items.name, items.id, items.end_date, items.max_bid, items.nb_of_bids, items.initial_price, items.category, items.seller, users.region FROM items, users WHERE items.category=? AND items.seller=users.id AND end_date>= ? ORDER BY items.end_date ASC LIMIT ? OFFSET ?",
+            "SELECT items.name, items.id, items.description, items.initial_price, items.quantity, items.reserve_price, items.buy_now, items.nb_of_bids, items.max_bid, items.start_date, items.end_date, items.seller, items.category, users.nickname, users.region FROM items, users WHERE items.category=? AND items.seller=users.id AND end_date>= ? ORDER BY items.end_date ASC LIMIT ? OFFSET ?",
                   ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
       }
       
@@ -121,14 +121,20 @@ public class SearchItemsByCategory extends RubisHttpServlet
            
           while (rs.next()) {
               
-              String sql = "INSERT INTO found_items VALUES ("
+              String sql = "INSERT INTO items VALUES ("
                       + rs.getInt("id") + ","
                       + "'" + rs.getString("name") + "',"
-                      + "?,"
+                      + "'" + rs.getString("description") + "',"
                       + rs.getFloat("initial_price") + ","
+                      + rs.getInt("quantity") + ","
+                      + rs.getFloat("reserve_price") + ","
+                      + rs.getFloat("buy_now") + ","
                       + rs.getInt("nb_of_bids") + ","
                       + rs.getFloat("max_bid") + ","
+                      + "?,"
+                      + "?,"
                       + rs.getInt("seller") + ","
+                      + "'" + rs.getString("nickname") + "',"
                       + rs.getInt("category") + ","
                       + rs.getInt("region") + ","
                       + "?,"
@@ -137,8 +143,9 @@ public class SearchItemsByCategory extends RubisHttpServlet
           
               //sp.printHTML("<br>" + sql + "<br>");
               cache = getCache().prepareStatement(sql);
-              cache.setTimestamp(1, rs.getTimestamp("end_date"));
-              cache.setTimestamp(2, new Timestamp(cert[0].getTimestamp()));
+              cache.setTimestamp(1, rs.getTimestamp("start_date"));
+              cache.setTimestamp(2, rs.getTimestamp("end_date"));
+              cache.setTimestamp(3, new Timestamp(cert[0].getTimestamp()));
               
               cache.executeUpdate();
               cache.close();
