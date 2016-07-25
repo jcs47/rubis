@@ -251,7 +251,8 @@ public class InitDB
       description += staticDescription.substring(0, descriptionLength);
       initialPrice = rand.nextInt(5000)+1;
       //duration = rand.nextInt(7)+1;
-      duration = 7;
+      //duration = 7;
+      duration = 365; // this  way, I do not need to constantly re-populate the database
       if (i < oldItems)
       { // This is an old item
         duration = -duration; // give a negative auction duration so that auction will be over

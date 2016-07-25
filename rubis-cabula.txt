@@ -37,4 +37,8 @@ sudo -u postgres /usr/lib/postgresql/9.4/bin/psql rubis
 	CREATE DATABASE rubis2 WITH TEMPLATE rubis OWNER benchmarksql;
 	CREATE DATABASE rubis3 WITH TEMPLATE rubis OWNER benchmarksql;
 
+#Criar backup: ~/Desktop/git/RUBiS/
+
+sudo -u postgres /usr/lib/postgresql/9.4/bin/pg_dump rubis > database/backup_all
+
 #Link util: https://underyx.me/2015/05/18/raising-the-maximum-number-of-file-descriptors
