@@ -330,6 +330,7 @@ public abstract class RubisHttpServlet extends HttpServlet
   }
   
   private static Connection cache = null; 
+  private static Connection repository = null; 
   
   public static Properties getDBProperties() {
       return dbProperties;
@@ -357,6 +358,13 @@ public abstract class RubisHttpServlet extends HttpServlet
       return cache;
   }
   
+  public static Connection getRepository() throws SQLException, ClassNotFoundException, IOException {
+      if (repository == null) {
+
+          loadCache();
+      }
+      return repository;
+  }
   /**
    * This method initializes the application cache
    * 
@@ -368,12 +376,17 @@ public abstract class RubisHttpServlet extends HttpServlet
       
       initProperties(); //initialize main db properties
                 
-      if (cache == null) {
+      if (cache == null || repository == null) {
           
-          //create cache database
+          //create cache database          
+          Class.forName("org.apache.derby.jdbc.ClientDriver");
+          cache = DriverManager.getConnection("jdbc:derby://localhost:1527/memory:myCache;create=true");
+          
+          //create relational repository to keep signatures, certificates and auxiliar info
           Class.forName("org.apache.derby.jdbc.EmbeddedDriver");
-          cache = DriverManager.getConnection("jdbc:derby:memory:myCache;create=true");
+          repository = DriverManager.getConnection("jdbc:derby:memory:myCache;create=true");
 
+          
           // fetch connection with main database
           Connection db = DriverManager.getConnection(
             dbProperties.getProperty("datasource.url"),
@@ -383,11 +396,11 @@ public abstract class RubisHttpServlet extends HttpServlet
           db.setAutoCommit(false);
           int position;
           
-          Statement s = cache.createStatement();
+          Statement s = repository.createStatement();
           s.executeUpdate("CREATE TABLE signatures (timestamp TIMESTAMP, replica INT, value VARCHAR (128) FOR BIT DATA NOT NULL)");
           s.close();
           
-          s = cache.createStatement();
+          s = repository.createStatement();
           s.executeUpdate("CREATE TABLE branches (timestamp TIMESTAMP, position INT, index INT, value VARCHAR (20) FOR BIT DATA NOT NULL)");
           s.close();
 
@@ -507,7 +520,7 @@ public abstract class RubisHttpServlet extends HttpServlet
           s.close();*/
           
           // create table to help analise queries from SearchitemBy* servlets.
-          s = cache.createStatement();
+          s = repository.createStatement();
           s.executeUpdate("CREATE TABLE items_aux (" +
             "   first_item      INT NOT NULL," + 
             "   last_item       INT NOT NULL," + 
@@ -521,7 +534,7 @@ public abstract class RubisHttpServlet extends HttpServlet
   
   protected static void storeSignatures(TreeCertificate[] cert) throws SQLException {
       
-    if (cache != null && cert != null) {
+    if (repository != null && cert != null) {
         
         PreparedStatement stmt;
        
@@ -529,7 +542,7 @@ public abstract class RubisHttpServlet extends HttpServlet
 
            if (c != null) {
 
-               stmt = cache.prepareStatement("INSERT INTO signatures VALUES (?," + c.getId() + ",?)");
+               stmt = repository.prepareStatement("INSERT INTO signatures VALUES (?," + c.getId() + ",?)");
                stmt.setTimestamp(1, new Timestamp(c.getTimestamp()));
                stmt.setBytes(2, c.getSignature());
                stmt.executeUpdate();
@@ -544,7 +557,7 @@ public abstract class RubisHttpServlet extends HttpServlet
   
   protected static void storeBranches(Timestamp ts, ResultSet rs, int index) throws SQLException {
         
-      if (cache != null && ts != null && rs != null) {
+      if (repository != null && ts != null && rs != null) {
           
         int position = 0;
         PreparedStatement stmt;
@@ -561,7 +574,7 @@ public abstract class RubisHttpServlet extends HttpServlet
         position = 0;
         for (MerkleTree b : branches) {
 
-            stmt = cache.prepareStatement("INSERT INTO branches VALUES (?," + position + "," + index + ",?)");
+            stmt = repository.prepareStatement("INSERT INTO branches VALUES (?," + position + "," + index + ",?)");
             stmt.setTimestamp(1, ts);
             stmt.setBytes(2, b.digest());
             stmt.executeUpdate();
