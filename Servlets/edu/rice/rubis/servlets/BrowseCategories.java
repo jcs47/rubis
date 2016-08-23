@@ -10,19 +10,15 @@ import java.sql.ResultSet;
 import java.sql.Timestamp;
 
 import java.util.LinkedList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import lasige.steeldb.jdbc.ResultSetData;
-
 import merkletree.MerkleTree;
 import merkletree.TreeCertificate;
-
-import org.apache.catalina.tribes.util.Arrays;
-
-import org.json.JSONArray;
 
 /** Builds the html page with the list of all categories and provides links to browse all
     items in a category or items in a category for a given region */
@@ -37,6 +33,82 @@ public class BrowseCategories extends RubisHttpServlet
   }
   
 
+  private boolean verifyCache(ResultSet rs) {
+      
+    try {
+      
+      /*stmt = getCache().prepareStatement("SELECT name, id from categories", ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+      rs = stmt.executeQuery();
+      
+      JSONArray json = TreeCertificate.getJSON((new ResultSetData(rs)).getRows());
+      
+      MerkleTree[] branches = TreeCertificate.getFirstLevel(TreeCertificate.jsonToLeafs(json));
+      
+      for (MerkleTree b : branches) {
+          sp.printHTML("<p>" + Arrays.toString(b.digest()) + "</p>");
+      }*/
+            
+      /*PreparedStatement stmt = getCache().prepareStatement("SELECT * from categories", ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+      rs = stmt.executeQuery();*/
+      
+      rs.beforeFirst();
+      if (!rs.next()) return false;
+      
+      Timestamp ts = rs.getTimestamp("timestamp");
+      
+      PreparedStatement stmt = getRepository().prepareStatement("SELECT * from branches WHERE timestamp = ? AND index = 0 ORDER BY position", ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+      stmt.setTimestamp(1, ts);
+      rs = stmt.executeQuery();
+      
+      rs.last();
+      MerkleTree[] branches = new MerkleTree[rs.getRow()];
+      rs.beforeFirst();
+      
+      int position = 0;
+      while (rs.next()) {
+          byte[] data = rs.getBytes("value");
+          //sp.printHTML("<p>" + Arrays.toString(data) + "</p>");
+          branches[position] = new MerkleTree(null, data);
+          position++;
+      }
+      
+      while (branches.length > 1)
+          branches = TreeCertificate.getNextLevel(branches);
+      
+      //sp.printHTML("<h3>MerkleTree root:</h3>");
+      //sp.printHTML("<p>" + Arrays.toString(branches[0].digest())  + "</p>");
+      
+      //Verifiyng signatures
+      
+      LinkedList<byte[]> l = new LinkedList<>();
+      for (MerkleTree b : branches) {
+          l.add(b.digest());
+      }
+      
+      stmt = getRepository().prepareStatement("SELECT * FROM signatures WHERE timestamp = ?", ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+      stmt.setTimestamp(1, ts);
+      rs = stmt.executeQuery();
+      
+      int count = 0;
+      
+      while (rs.next()) {
+          
+          byte[] buffer = TreeCertificate.concatenate(rs.getInt("replica"), ts.getTime(), l);
+          boolean verify = TOMUtil.verifySignature(getReplicaKey(rs.getInt("replica")), buffer, rs.getBytes("value"));
+          
+          //sp.printHTML("<p>Verified: " + rs.getInt("replica") + ": " + verify + "</p>");
+          
+          if (verify) count++;
+      }
+      
+      
+    } catch (Exception ex) {
+        Logger.getLogger(BrowseCategories.class.getName()).log(Level.SEVERE, null, ex);
+        return false;    
+    }
+  }
+  
+ 
   /** List all the categories in the database */
   private boolean categoryList(int regionId, int userId, PreparedStatement stmt, Connection conn, ServletPrinter sp)
   {
@@ -72,7 +144,7 @@ public class BrowseCategories extends RubisHttpServlet
       return false;
     }
     try
-    {
+    {            
       if (!rs.first())
       {
         printError("Sorry, but there is no category available at this time. Database table is empty.", sp);
@@ -100,78 +172,8 @@ public class BrowseCategories extends RubisHttpServlet
         }
       }
       while (rs.next());
-      
-      if (fromCache) { // temporary code
-          
-          stmt = getCache().prepareStatement("SELECT name, id from categories", ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-          rs = stmt.executeQuery();
-          
-          sp.printHTML("<h3>Re-creating first branches from result set fetched from cache (table 'categories')</h3>");
-          JSONArray json = TreeCertificate.getJSON((new ResultSetData(rs)).getRows());
-          //sp.printHTML("<p>JSON format: " + json + "</p>");
-          //sp.printHTML("<p>Branches:</p>");
-
-          MerkleTree[] branches = TreeCertificate.getFirstLevel(TreeCertificate.jsonToLeafs(json));
-          
-          for (MerkleTree b : branches) {
-              sp.printHTML("<p>" + Arrays.toString(b.digest()) + "</p>");
-          }
-          
-          sp.printHTML("<h3>Getting first branches from cache (table 'branches')</h3>");
-          
-          stmt = getCache().prepareStatement("SELECT * from categories", ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-          rs = stmt.executeQuery();
-          
-          rs.next();
-          Timestamp ts = rs.getTimestamp("timestamp");
-          
-          stmt = getCache().prepareStatement("SELECT * from branches WHERE timestamp = ? AND index = 0 ORDER BY position", ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-          stmt.setTimestamp(1, ts);
-          rs = stmt.executeQuery();
-          
-          rs.last();
-          branches = new MerkleTree[rs.getRow()];
-          rs.beforeFirst();
-          
-          int position = 0;
-          while (rs.next()) {
-              byte[] data = rs.getBytes("value");
-              sp.printHTML("<p>" + Arrays.toString(data) + "</p>");
-              branches[position] = new MerkleTree(null, data);
-              position++;
-          }
-          
-          while (branches.length > 1)
-              branches = TreeCertificate.getNextLevel(branches);
-          
-          sp.printHTML("<h3>MerkleTree root:</h3>");
-          sp.printHTML("<p>" + Arrays.toString(branches[0].digest())  + "</p>");
-          
-          sp.printHTML("<h3>Verifiyng signatures:</h3>");
-          
-          LinkedList<byte[]> l = new LinkedList<>();
-          for (MerkleTree b : branches) {
-              l.add(b.digest());
-          }
-          
-
-          stmt = getCache().prepareStatement("SELECT * FROM signatures WHERE timestamp = ?", ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-          stmt.setTimestamp(1, ts);
-          rs = stmt.executeQuery();
-          while (rs.next()) {
-          
-            byte[] buffer = TreeCertificate.concatenate(rs.getInt("replica"), ts.getTime(), l);
-            boolean verify = TOMUtil.verifySignature(getReplicaKey(rs.getInt("replica")), buffer, rs.getBytes("value"));
-            //sp.printHTML("<p>Concatenation from replica " + rs.getInt("replica") + ": " + Arrays.toString(buffer) + "</p>");
-            
-            //sp.printHTML("<p>Signature for replica " + rs.getInt("replica") + ": " + Arrays.toString(rs.getBytes("value")) + "</p>");
-            
-            sp.printHTML("<p>Verified: " + rs.getInt("replica") + ": " + verify + "</p>");
-            
-          }
-      }
-      
     }
+    
     catch (Exception e)
     {
       printError("Exception getting categories list.", sp);

@@ -1,0 +1,14 @@
+Wed Jul 27 19:41:36 WEST 2016 : Apache Derby Network Server - 10.12.1.1 - (1704137) started and ready to accept connections on port 1527
+----------------------------------------------------------------
+Wed Jul 27 19:41:43 WEST 2016:
+Booting Derby version The Apache Software Foundation - Apache Derby - 10.12.1.1 - (1704137): instance a816c00e-0156-2da9-7686-ffffdd5fb098 
+on database directory memory:/home/snake/Desktop/git/RUBiS/db-derby-10.12.1.1-bin/lib/myCache with class loader sun.misc.Launcher$AppClassLoader@55f96302 
+Loaded from file:/home/snake/Desktop/git/RUBiS/db-derby-10.12.1.1-bin/lib/derby.jar
+java.vendor=Oracle Corporation
+java.runtime.version=1.8.0_101-b13
+user.dir=/home/snake/Desktop/git/RUBiS/db-derby-10.12.1.1-bin/lib
+os.name=Linux
+os.arch=amd64
+os.version=3.16.0-77-generic
+derby.system.home=/home/snake/Desktop/git/RUBiS/db-derby-10.12.1.1-bin/lib
+Database Class Loader started - derby.database.classpath=''

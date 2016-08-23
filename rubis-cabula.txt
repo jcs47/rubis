@@ -4,6 +4,10 @@ cp -v ../../steeldb/bin/SteelDB.jar ../Servlet_HTML/WEB-INF/lib/ ;  ant clean ; 
 #matar tudo o que e java
 sudo killall java
 
+#Lançar cache: ~/Desktop/git/RUBiS/db-derby-10.12.1.1-bin/lib
+export DERBY_INSTALL=~/Desktop/git/RUBiS/db-derby-10.12.1.1-bin/
+java -jar derbyrun.jar server starts
+
 #Lançar tomcat: ~/apache-tomcat-8.0.15/bin
 ./startup.sh
 # fazer deploy do .war em ~/Desktop/git/RUBiS/Servlets/
