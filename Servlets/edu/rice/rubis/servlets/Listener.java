@@ -19,7 +19,7 @@ public class Listener implements ServletContextListener {
     public void contextInitialized(ServletContextEvent sce) {
 
         // This is necessary for SteelDB
-        System.setProperty("divdb.folder", "/home/snake/Desktop/git/steeldb/config");
+        System.setProperty("divdb.folder", "/home/joao/Desktop/git/steeldb/config");
 
         try {
             // initialize properties

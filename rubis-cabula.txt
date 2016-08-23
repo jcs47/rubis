@@ -6,7 +6,7 @@ sudo killall java
 
 #Lançar cache: ~/Desktop/git/RUBiS/db-derby-10.12.1.1-bin/lib
 export DERBY_INSTALL=~/Desktop/git/RUBiS/db-derby-10.12.1.1-bin/
-java -jar derbyrun.jar server starts
+java -jar derbyrun.jar server start
 
 #Lançar tomcat: ~/apache-tomcat-8.0.15/bin
 ./startup.sh

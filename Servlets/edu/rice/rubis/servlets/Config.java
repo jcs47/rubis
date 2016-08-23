@@ -18,9 +18,9 @@ public class Config
   }
 
   public static final String HTMLFilesPath =
-    "/home/snake/Desktop/git/RUBiS/Servlet_HTML";
+    "/home/joao/Desktop/git/RUBiS/Servlet_HTML";
   public static final String DatabaseProperties =
-    "/home/snake/Desktop/git/RUBiS/Servlets/mysql.properties";
+    "/home/joao/Desktop/git/RUBiS/Servlets/mysql.properties";
 
  // original values for pooling
  /* public static final int AboutMePoolSize = 10;

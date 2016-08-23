@@ -42,6 +42,7 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Properties;
 import java.util.Stack;
 
@@ -331,6 +332,7 @@ public abstract class RubisHttpServlet extends HttpServlet
   
   private static Connection cache = null; 
   private static Connection repository = null; 
+  public static final int F = 1;
   
   public static Properties getDBProperties() {
       return dbProperties;
@@ -396,12 +398,12 @@ public abstract class RubisHttpServlet extends HttpServlet
           db.setAutoCommit(false);
           int position;
           
-          Statement s = repository.createStatement();
+          Statement s = cache.createStatement();
           s.executeUpdate("CREATE TABLE signatures (timestamp TIMESTAMP, replica INT, value VARCHAR (128) FOR BIT DATA NOT NULL)");
           s.close();
           
-          s = repository.createStatement();
-          s.executeUpdate("CREATE TABLE branches (timestamp TIMESTAMP, position INT, index INT, value VARCHAR (20) FOR BIT DATA NOT NULL)");
+          s = cache.createStatement();
+          s.executeUpdate("CREATE TABLE leafHashes (timestamp TIMESTAMP, position INT, index INT, value VARCHAR (20) FOR BIT DATA NOT NULL)");
           s.close();
 
           // create pre-fetched tables for categories
@@ -499,7 +501,42 @@ public abstract class RubisHttpServlet extends HttpServlet
             "   PRIMARY KEY(id)" +
             ")");
           s.close();
-
+          
+          // create table for items
+          s = cache.createStatement();
+          s.executeUpdate("CREATE TABLE comments (\n" +
+                "   id           INT,\n" +
+                "   nickname     VARCHAR(20) NOT NULL UNIQUE,\n" +
+                "   from_user_id INTEGER NOT NULL,\n" +
+                "   to_user_id   INTEGER NOT NULL,\n" +
+                "   item_id      INTEGER NOT NULL,\n" +
+                "   rating       INTEGER,\n" +
+                "   date         TIMESTAMP,\n" +
+                "   comment      LONG VARCHAR,\n" +
+                "   timestamp     TIMESTAMP," +
+                "   position      INT," +
+                "   index         INT," +
+                "   PRIMARY KEY(id)\n" +
+            ")");
+          s.close();
+          
+          // create table for items
+          s = cache.createStatement();
+          s.executeUpdate("CREATE TABLE users (\n" +
+            "   id            INT,\n" +
+            "   firstname     VARCHAR(20),\n" +
+            "   lastname      VARCHAR(20),\n" +
+            "   nickname      VARCHAR(20) NOT NULL UNIQUE,\n" +
+            "   email         VARCHAR(50) NOT NULL,\n" +
+            "   rating        INTEGER,\n" +
+            "   creation_date TIMESTAMP,\n" +
+            "   timestamp     TIMESTAMP," +
+            "   position      INT," +
+            "   index         INT," +
+            "   PRIMARY KEY(id)\n" +
+            ")");
+          s.close();
+          
           // create table for found items
           /*s = cache.createStatement();
           s.executeUpdate("CREATE TABLE found_items (" +
@@ -531,10 +568,10 @@ public abstract class RubisHttpServlet extends HttpServlet
           s.close();
       }
   }
-  
+          
   protected static void storeSignatures(TreeCertificate[] cert) throws SQLException {
       
-    if (repository != null && cert != null) {
+    if (cache != null && cert != null) {
         
         PreparedStatement stmt;
        
@@ -542,7 +579,7 @@ public abstract class RubisHttpServlet extends HttpServlet
 
            if (c != null) {
 
-               stmt = repository.prepareStatement("INSERT INTO signatures VALUES (?," + c.getId() + ",?)");
+               stmt = cache.prepareStatement("INSERT INTO signatures VALUES (?," + c.getId() + ",?)");
                stmt.setTimestamp(1, new Timestamp(c.getTimestamp()));
                stmt.setBytes(2, c.getSignature());
                stmt.executeUpdate();
@@ -557,7 +594,7 @@ public abstract class RubisHttpServlet extends HttpServlet
   
   protected static void storeBranches(Timestamp ts, ResultSet rs, int index) throws SQLException {
         
-      if (repository != null && ts != null && rs != null) {
+      if (cache != null && ts != null && rs != null) {
           
         int position = 0;
         PreparedStatement stmt;
@@ -566,17 +603,17 @@ public abstract class RubisHttpServlet extends HttpServlet
 
          // store first level branches
          JSONArray json = TreeCertificate.getJSON((new ResultSetData(rs)).getRows());
-         MerkleTree[] branches = TreeCertificate.getFirstLevel(TreeCertificate.jsonToLeafs(json));
+         byte[][] hashes = TreeCertificate.getLeafsHashes(TreeCertificate.jsonToLeafs(json));
 
          rs.beforeFirst();
 
          
         position = 0;
-        for (MerkleTree b : branches) {
+        for (byte[] b : hashes) {
 
-            stmt = repository.prepareStatement("INSERT INTO branches VALUES (?," + position + "," + index + ",?)");
+            stmt = cache.prepareStatement("INSERT INTO leafHashes VALUES (?," + position + "," + index + ",?)");
             stmt.setTimestamp(1, ts);
-            stmt.setBytes(2, b.digest());
+            stmt.setBytes(2, b);
             stmt.executeUpdate();
             stmt.close();
 
