@@ -33,9 +33,10 @@ public class ServletPrinter
     {
       out = toWebServer.getWriter();
     }
-    catch (IOException ioe)
+    catch (IOException e)
     {
-      ioe.printStackTrace();
+      RubisHttpServlet.printError("Problem while ccreating ServletPrinter.", this);
+      RubisHttpServlet.printException(e, this);
     }
     servletName = callingServletName;
   }
@@ -70,7 +71,8 @@ public class ServletPrinter
     }
     catch (Exception e)
     {
-      out.println("Unable to read file (exception: " + e + ")<br />");
+      RubisHttpServlet.printError("Unable to read file.", this);
+      RubisHttpServlet.printException(e, this);
     }
     finally
     {
@@ -79,10 +81,10 @@ public class ServletPrinter
         {
           fis.close();
         }
-        catch (Exception ex)
+        catch (Exception e)
         {
-          out.println(
-            "Unable to close the file reader (exception: " + ex + ")<br />");
+            RubisHttpServlet.printError("Unable to close file reader.", this);
+            RubisHttpServlet.printException(e, this);
         }
     }
   }
@@ -154,7 +156,8 @@ public class ServletPrinter
     }
     catch (Exception e)
     {
-      out.println("Unable to print Category (exception: " + e + ")<br />");
+      RubisHttpServlet.printError("Unable to print category.", this);
+      RubisHttpServlet.printException(e, this);
     }
   }
 
@@ -176,7 +179,9 @@ public class ServletPrinter
     }
     catch (Exception e)
     {
-      out.println("Unable to print Category (exception: " + e + ")<br />");
+        
+      RubisHttpServlet.printError("Unable to print category.", this);
+      RubisHttpServlet.printException(e, this);
     }
   }
 
@@ -196,7 +201,8 @@ public class ServletPrinter
     }
     catch (Exception e)
     {
-      out.println("Unable to print Category (exception: " + e + ")<br />");
+      RubisHttpServlet.printError("Unable to print category.", this);
+      RubisHttpServlet.printException(e, this);
     }
   }
 
@@ -217,7 +223,8 @@ public class ServletPrinter
     }
     catch (Exception e)
     {
-      out.println("Unable to print Region (exception: " + e + ")<br />");
+      RubisHttpServlet.printError("unable to print region.", this);
+      RubisHttpServlet.printException(e, this);
     }
   }
 
@@ -260,7 +267,8 @@ public class ServletPrinter
     }
     catch (Exception e)
     {
-      out.println("Unable to print Item (exception: " + e + ")<br />");
+      RubisHttpServlet.printError("Unable to print item.", this);
+      RubisHttpServlet.printException(e, this);
     }
   }
 
@@ -312,7 +320,7 @@ public class ServletPrinter
       }
       else
       {
-        if (quantity > 1)
+        if (quantity > 1 && conn != null)
         {
           try
           {
@@ -346,7 +354,8 @@ public class ServletPrinter
           }
           catch (Exception e)
           {
-            printHTML("Problem while computing current bid: " + e + "<br />");
+            RubisHttpServlet.printError("Problem while computing current bid.", this);
+            RubisHttpServlet.printException(e, this);
             return;
           }
         }
@@ -464,8 +473,8 @@ public class ServletPrinter
     }
     catch (Exception e)
     {
-      out.println(
-        "Unable to print Item description (exception: " + e + ")<br />\n");
+      RubisHttpServlet.printError("Unable to print item description.", this);
+      RubisHttpServlet.printException(e, this);
     }
   }
 
@@ -531,7 +540,8 @@ public class ServletPrinter
     }
     catch (Exception e)
     {
-      out.println("Unable to print Item (exception: " + e + ")<br />\n");
+      RubisHttpServlet.printError("Unable to print item.", this);
+      RubisHttpServlet.printException(e, this);
     }
   }
 
@@ -572,7 +582,8 @@ public class ServletPrinter
     }
     catch (Exception e)
     {
-      out.println("Unable to print Item (exception: " + e + ")<br />\n");
+      RubisHttpServlet.printError("Unable to print item.", this);
+      RubisHttpServlet.printException(e, this);
     }
   }
 
@@ -617,7 +628,8 @@ public class ServletPrinter
     }
     catch (Exception e)
     {
-      out.println("Unable to print Item (exception: " + e + ")<br />\n");
+      RubisHttpServlet.printError("Unable to print item.", this);
+      RubisHttpServlet.printException(e, this);
     }
   }
 
@@ -668,7 +680,8 @@ public class ServletPrinter
     }
     catch (Exception e)
     {
-      out.println("Unable to print Item (exception: " + e + ")<br>\n");
+      RubisHttpServlet.printError("Unable to print item.", this);
+      RubisHttpServlet.printException(e, this);
     }
   }
 
@@ -748,8 +761,8 @@ public class ServletPrinter
     }
     catch (Exception e)
     {
-      out.println(
-        "Unable to print Item description (exception: " + e + ")<br />\n");
+      RubisHttpServlet.printError("Unable to print item description.", this);
+      RubisHttpServlet.printException(e, this);
     }
   }
 
@@ -787,7 +800,8 @@ public class ServletPrinter
     }
     catch (Exception e)
     {
-      out.println("Unable to print Bid (exception: " + e + ")<br />");
+      RubisHttpServlet.printError("Unable to print bid.", this);
+      RubisHttpServlet.printException(e, this);
     }
   }
 
@@ -818,7 +832,8 @@ public class ServletPrinter
     }
     catch (Exception e)
     {
-      out.println("Unable to print Comment (exception: " + e + ")<br />");
+      RubisHttpServlet.printError("Unable to print comment.", this);
+      RubisHttpServlet.printException(e, this);
     }
   }
 

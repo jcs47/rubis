@@ -292,14 +292,14 @@ public abstract class RubisHttpServlet extends HttpServlet
     * Display an error message.
     * @param errorMsg the error message value
     */
-    public void printError(String errorMsg, ServletPrinter sp)
+    public static void printError(String errorMsg, ServletPrinter sp)
     {
         sp.printHTML("<h2>Your request has not been processed due to the following error:</h2>");
         sp.printHTML("<h3>" + errorMsg + "</h3>");
     
   }
     
-    public void printException(Exception e, ServletPrinter sp) {
+    public static void printException(Exception e, ServletPrinter sp) {
       sp.printHTML("<p>Cause: " + e.toString() + "</p>");
       sp.printHTML("<p>Message: " + e.getMessage() + "</p>");
       sp.printHTML("<p>Stacktrace: </p><blockquote>");
@@ -536,7 +536,7 @@ public abstract class RubisHttpServlet extends HttpServlet
             "   PRIMARY KEY(id)\n" +
             ")");
           s.close();
-          
+                  
           // create table for found items
           /*s = cache.createStatement();
           s.executeUpdate("CREATE TABLE found_items (" +

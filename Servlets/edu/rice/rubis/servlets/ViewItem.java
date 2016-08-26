@@ -565,7 +565,7 @@ public class ViewItem extends RubisHttpServlet
         startDate,
         endDate,
         -1,
-        conn);
+        (fromCache ? null : conn));
     }
     catch (Exception e)
     {
