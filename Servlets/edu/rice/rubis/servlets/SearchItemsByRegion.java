@@ -456,7 +456,10 @@ public class SearchItemsByRegion extends RubisHttpServlet
                cache.executeUpdate();
                cache.close();
 
+              getCache().setAutoCommit(false);
               while (rs.next()) {
+                  
+                    eraseFromCache("items", "id", rs.getInt("id"), "items_aux");
 
                     String sql = "INSERT INTO items VALUES ("
                             + rs.getInt("id") + ","
@@ -489,6 +492,7 @@ public class SearchItemsByRegion extends RubisHttpServlet
 
               }
 
+              getCache().commit();
               rs.beforeFirst();
           }
       

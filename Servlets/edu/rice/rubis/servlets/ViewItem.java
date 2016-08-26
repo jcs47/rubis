@@ -509,6 +509,11 @@ public class ViewItem extends RubisHttpServlet
           sellerStmt.close();*/
 
           //store in cache
+            
+          getCache().setAutoCommit(false);
+          
+          eraseFromCache("items", "id", rs.getInt("id"), "items_aux");
+          
           String sql = "INSERT INTO items VALUES ("
                 + rs.getInt("id") + ","
                 + "'" + itemName + "',"
@@ -536,6 +541,8 @@ public class ViewItem extends RubisHttpServlet
 
           cache.executeUpdate();
           cache.close();
+          
+          getCache().commit();
 
         }
         catch (Exception e)

@@ -288,6 +288,48 @@ public abstract class RubisHttpServlet extends HttpServlet
     }
   }
 
+  public void eraseFromCache(String table, String primaryKeyName, int primaryKeyValue, String aux_table) throws SQLException {
+      
+      PreparedStatement stmt = cache.prepareStatement("SELECT timestamp FROM " + table + " WHERE " + primaryKeyName + "=" + primaryKeyValue);
+      
+      ResultSet rs = stmt.executeQuery();
+      
+      if (rs.next()) {
+       
+          Timestamp timestamp = rs.getTimestamp("timestamp");
+          
+          stmt.close();
+          rs.close();
+          
+          stmt = cache.prepareStatement("DELETE FROM " + table + " WHERE TIMESTAMP = ?");
+          stmt.setTimestamp(1, timestamp);
+          stmt.executeUpdate();
+          stmt.close();
+          
+          stmt = cache.prepareStatement("DELETE FROM leafHashes WHERE TIMESTAMP = ?");
+          stmt.setTimestamp(1, timestamp);
+          stmt.executeUpdate();
+          stmt.close();
+          
+          stmt = cache.prepareStatement("DELETE FROM signatures WHERE TIMESTAMP = ?");
+          stmt.setTimestamp(1, timestamp);
+          stmt.executeUpdate();
+          stmt.close();
+          
+          if (aux_table != null) {
+              
+              stmt = cache.prepareStatement("DELETE FROM " + table + " WHERE TIMESTAMP = ?");
+              stmt.setTimestamp(1, timestamp);
+              stmt.executeUpdate();
+              stmt.close();
+          }
+          
+      } else {
+          stmt.close();
+          rs.close();
+      }
+  }
+  
   /**
     * Display an error message.
     * @param errorMsg the error message value
