@@ -508,6 +508,7 @@ public class SearchItemsByCategory extends RubisHttpServlet
                }
 
               getCache().commit();
+              getCache().setAutoCommit(true);
               rs.beforeFirst();
           }
       } else {

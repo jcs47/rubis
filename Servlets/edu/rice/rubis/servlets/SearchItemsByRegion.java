@@ -493,6 +493,8 @@ public class SearchItemsByRegion extends RubisHttpServlet
               }
 
               getCache().commit();
+              getCache().setAutoCommit(true);
+              
               rs.beforeFirst();
           }
       

@@ -543,6 +543,7 @@ public class ViewItem extends RubisHttpServlet
           cache.close();
           
           getCache().commit();
+          getCache().setAutoCommit(true);
 
         }
         catch (Exception e)
