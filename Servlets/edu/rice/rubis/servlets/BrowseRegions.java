@@ -14,6 +14,7 @@ import java.sql.Timestamp;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -38,26 +39,33 @@ public class BrowseRegions extends RubisHttpServlet
     return Config.BrowseRegionsPoolSize;
   }
 
-  private void dropTables() throws ClassNotFoundException, IOException {
+  private void dropTables(String id) throws ClassNotFoundException, IOException {
       try {
           Statement s = getRepository().createStatement();
-          s.executeUpdate("DROP TABLE regions");
-          s.close();
-          
-          s = getRepository().createStatement();
-          s.executeUpdate("DROP TABLE leafHashes");
-          s.close();
-          
-          s = getRepository().createStatement();
-          s.executeUpdate("DROP TABLE signatures");
+          s.executeUpdate("DROP TABLE regions" + id);
           s.close();
       } catch (SQLException ex) {
-          Logger.getLogger(BrowseRegions.class.getName()).log(Level.SEVERE, null, ex);
+          //Logger.getLogger(BrowseCategories.class.getName()).log(Level.SEVERE, null, ex);
+      }
+      try {
+          Statement s = getRepository().createStatement();
+          s.executeUpdate("DROP TABLE leafHashes" + id);
+          s.close();
+      } catch (SQLException ex) {
+          //Logger.getLogger(BrowseCategories.class.getName()).log(Level.SEVERE, null, ex);
+      }
+      try {
+          Statement s = getRepository().createStatement();
+          s.executeUpdate("DROP TABLE signatures" + id);
+          s.close();
+      } catch (SQLException ex) {
+          //Logger.getLogger(BrowseCategories.class.getName()).log(Level.SEVERE, null, ex);
       }
   }
 
   private boolean verifyCache(ResultSet cachedRS, ServletPrinter sp) {
       
+    String id = UUID.randomUUID().toString().replace('-', '_');
     try {
       
       //sp.printHTML("<p>Verifiyng...</p>");
@@ -80,19 +88,19 @@ public class BrowseRegions extends RubisHttpServlet
      // tables...
      
      //drop tables used in repository
-     dropTables();
+     dropTables(id);
      
      //sp.printHTML("<p>Tables...</p>");
      s = getRepository().createStatement();
-     s.executeUpdate("CREATE TABLE regions (id INT, name VARCHAR(50), timestamp TIMESTAMP, position INT, index INT)");
+     s.executeUpdate("CREATE TABLE regions"+ id + " (id INT, name VARCHAR(50), timestamp TIMESTAMP, position INT, index INT)");
      s.close();
           
      s = getRepository().createStatement();
-     s.executeUpdate("CREATE TABLE signatures (timestamp TIMESTAMP, replica INT, value VARCHAR (128) FOR BIT DATA NOT NULL)");
+     s.executeUpdate("CREATE TABLE signatures"+ id + " (timestamp TIMESTAMP, replica INT, value VARCHAR (128) FOR BIT DATA NOT NULL)");
      s.close();
      
      s = getRepository().createStatement();
-     s.executeUpdate("CREATE TABLE leafHashes (timestamp TIMESTAMP, position INT, index INT, value VARCHAR (20) FOR BIT DATA NOT NULL)");
+     s.executeUpdate("CREATE TABLE leafHashes"+ id + " (timestamp TIMESTAMP, position INT, index INT, value VARCHAR (20) FOR BIT DATA NOT NULL)");
      s.close();
 
      // insert values...
@@ -107,7 +115,7 @@ public class BrowseRegions extends RubisHttpServlet
       int index = cachedRS.getInt("index");
       Timestamp t = cachedRS.getTimestamp("timestamp");
 
-      stmt = getRepository().prepareStatement("INSERT INTO regions VALUES (" + regionId + ",'" + regionName + "',?," + position + "," + index + ")");
+      stmt = getRepository().prepareStatement("INSERT INTO regions"+ id + " VALUES (" + regionId + ",'" + regionName + "',?," + position + "," + index + ")");
       stmt.setTimestamp(1, t);
       stmt.executeUpdate();
       stmt.close();
@@ -125,7 +133,7 @@ public class BrowseRegions extends RubisHttpServlet
       Timestamp t = rs.getTimestamp("timestamp");
       byte[] b = rs.getBytes("value");
 
-      stmt2 = getRepository().prepareStatement("INSERT INTO signatures VALUES (?," + replica + ",?)");
+      stmt2 = getRepository().prepareStatement("INSERT INTO signatures"+ id + " VALUES (?," + replica + ",?)");
       stmt2.setTimestamp(1, t);
       stmt2.setBytes(2, b);
       stmt2.executeUpdate();
@@ -147,7 +155,7 @@ public class BrowseRegions extends RubisHttpServlet
       Timestamp t = rs.getTimestamp("timestamp");
       byte[] b = rs.getBytes("value");
 
-      stmt2 = getRepository().prepareStatement("INSERT INTO leafHashes VALUES (?," + position + "," + index + ",?)");
+      stmt2 = getRepository().prepareStatement("INSERT INTO leafHashes"+ id + " VALUES (?," + position + "," + index + ",?)");
       stmt2.setTimestamp(1, t);
       stmt2.setBytes(2, b);
       stmt2.executeUpdate();
@@ -160,7 +168,7 @@ public class BrowseRegions extends RubisHttpServlet
      // Fetch regions
      //sp.printHTML("<p>Fetch regions...</p>");
      s = getRepository().createStatement();
-     ResultSet regions = s.executeQuery("SELECT * FROM regions");
+     ResultSet regions = s.executeQuery("SELECT * FROM regions"+ id);
      
      List<byte[]> temp = new LinkedList();
      
@@ -182,7 +190,7 @@ public class BrowseRegions extends RubisHttpServlet
       byte[] b = TreeCertificate.getLeafHashes(new Leaf(l));
       temp.add(b);
 
-      stmt = getRepository().prepareStatement("SELECT count(*) AS total FROM leafHashes WHERE timestamp = ? AND index = " + regions.getInt("index") + " AND position = " +regions.getInt("position") + " AND value = ?", ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+      stmt = getRepository().prepareStatement("SELECT count(*) AS total FROM leafHashes"+ id + " WHERE timestamp = ? AND index = " + regions.getInt("index") + " AND position = " +regions.getInt("position") + " AND value = ?", ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
       stmt.setTimestamp(1, regions.getTimestamp("timestamp"));
       stmt.setBytes(2, b);
       rs = stmt.executeQuery();
@@ -197,7 +205,7 @@ public class BrowseRegions extends RubisHttpServlet
           sp.printHTML("<p>Leaf hash not found!</p>");
           
           //drop tables used in repository
-          dropTables();
+          dropTables(id);
           return false;
       }
       stmt.close();
@@ -208,7 +216,7 @@ public class BrowseRegions extends RubisHttpServlet
      regions.close();
            
      // re-create first level branches from the certificates
-     stmt = getRepository().prepareStatement("SELECT * from leafHashes WHERE timestamp = ? AND index = 0 ORDER BY position", ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+     stmt = getRepository().prepareStatement("SELECT * from leafHashes"+ id + " WHERE timestamp = ? AND index = 0 ORDER BY position", ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
      stmt.setTimestamp(1, ts);
      rs = stmt.executeQuery();
      
@@ -258,7 +266,7 @@ public class BrowseRegions extends RubisHttpServlet
          l.add(b.digest());
      }
       
-     stmt = getRepository().prepareStatement("SELECT * FROM signatures WHERE timestamp = ?", ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+     stmt = getRepository().prepareStatement("SELECT * FROM signatures"+ id + " WHERE timestamp = ?", ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
      stmt.setTimestamp(1, ts);
      rs = stmt.executeQuery();
       
@@ -280,12 +288,17 @@ public class BrowseRegions extends RubisHttpServlet
      rs.close();
      
      //drop tables used in repository
-     dropTables();
+     dropTables(id);
           
      return count > 2*RubisHttpServlet.F;
       
     } catch (Exception ex) {
         printException(ex, sp);
+        try {
+            dropTables(id);
+        } catch (Exception ex1) {
+            printException(ex, sp);
+        }
         
         return false;    
     }    
