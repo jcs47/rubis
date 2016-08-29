@@ -40,6 +40,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+import java.util.Arrays;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -318,7 +319,7 @@ public abstract class RubisHttpServlet extends HttpServlet
           
           if (aux_table != null) {
               
-              stmt = cache.prepareStatement("DELETE FROM " + table + " WHERE TIMESTAMP = ?");
+              stmt = repository.prepareStatement("DELETE FROM " + aux_table + " WHERE TIMESTAMP = ?");
               stmt.setTimestamp(1, timestamp);
               stmt.executeUpdate();
               stmt.close();
@@ -394,7 +395,7 @@ public abstract class RubisHttpServlet extends HttpServlet
       }
   }
   
-  public static Connection getCache() throws SQLException, ClassNotFoundException, IOException {
+  public static Connection getCache() throws Exception {
       if (cache == null) {
 
           loadCache();
@@ -402,7 +403,7 @@ public abstract class RubisHttpServlet extends HttpServlet
       return cache;
   }
   
-  public static Connection getRepository() throws SQLException, ClassNotFoundException, IOException {
+  public static Connection getRepository() throws Exception {
       if (repository == null) {
 
           loadCache();
@@ -416,7 +417,7 @@ public abstract class RubisHttpServlet extends HttpServlet
    * @throws ClassNotFoundException
    * @throws IOException 
    */
-  public static void loadCache() throws SQLException, ClassNotFoundException, IOException {
+  public static void loadCache() throws Exception {
       
       initProperties(); //initialize main db properties
                 
@@ -462,7 +463,7 @@ public abstract class RubisHttpServlet extends HttpServlet
           TreeCertificate[] cert  = ((BFTPreparedStatement) stmt).getCertificates();          
           
           storeSignatures(cert);
-          storeBranches(new Timestamp(cert[0].getTimestamp()), rs, 0);
+          storeLeafHashes(new Timestamp(cert[0].getTimestamp()), rs, 0, null);
           
           // store rows for categories in cache
           String categoryName;
@@ -498,7 +499,7 @@ public abstract class RubisHttpServlet extends HttpServlet
           
 
           storeSignatures(cert);
-          storeBranches(new Timestamp(cert[0].getTimestamp()), rs, 0);
+          storeLeafHashes(new Timestamp(cert[0].getTimestamp()), rs, 0, null);
            
           // store rows for regions in cache
           position = 0;
@@ -601,8 +602,8 @@ public abstract class RubisHttpServlet extends HttpServlet
           // create table to help analise queries from SearchitemBy* servlets.
           s = repository.createStatement();
           s.executeUpdate("CREATE TABLE items_aux (" +
-            "   first_item      INT NOT NULL," + 
-            "   last_item       INT NOT NULL," + 
+            "   page           INT NOT NULL," + 
+            "   nbOfItems      INT NOT NULL," + 
             "   category       INT NOT NULL," +
             "   region         INT NOT NULL," +
             "   timestamp      TIMESTAMP" +
@@ -634,7 +635,7 @@ public abstract class RubisHttpServlet extends HttpServlet
     }
   }
   
-  protected static void storeBranches(Timestamp ts, ResultSet rs, int index) throws SQLException {
+  protected static void storeLeafHashes(Timestamp ts, ResultSet rs, int index, ServletPrinter sp) throws SQLException {
         
       if (cache != null && ts != null && rs != null) {
           
@@ -652,6 +653,8 @@ public abstract class RubisHttpServlet extends HttpServlet
          
         position = 0;
         for (byte[] b : hashes) {
+            
+            if (sp != null) sp.printHTML("<p>" + Arrays.toString(b) + "</p>");
 
             stmt = cache.prepareStatement("INSERT INTO leafHashes VALUES (?," + position + "," + index + ",?)");
             stmt.setTimestamp(1, ts);
@@ -662,6 +665,8 @@ public abstract class RubisHttpServlet extends HttpServlet
             position++;
         }
          
+      } else {
+          throw new RuntimeException("received a null argument while trying to store leaf hashes");
       }
   }
 }

@@ -57,28 +57,28 @@ public class ViewUserInfo extends RubisHttpServlet
           Statement s = getRepository().createStatement();
           s.executeUpdate("DROP TABLE users" + id);
           s.close();
-      } catch (SQLException ex) {
+      } catch (Exception ex) {
           //Logger.getLogger(BrowseCategories.class.getName()).log(Level.SEVERE, null, ex);
       }
       try {
           Statement s = getRepository().createStatement();
           s.executeUpdate("DROP TABLE comments" + id);
           s.close();
-      } catch (SQLException ex) {
+      } catch (Exception ex) {
           //Logger.getLogger(BrowseCategories.class.getName()).log(Level.SEVERE, null, ex);
       }
       try {
           Statement s = getRepository().createStatement();
           s.executeUpdate("DROP TABLE leafHashes" + id);
           s.close();
-      } catch (SQLException ex) {
+      } catch (Exception ex) {
           //Logger.getLogger(BrowseCategories.class.getName()).log(Level.SEVERE, null, ex);
       }
       try {
           Statement s = getRepository().createStatement();
           s.executeUpdate("DROP TABLE signatures" + id);
           s.close();
-      } catch (SQLException ex) {
+      } catch (Exception ex) {
           //Logger.getLogger(BrowseCategories.class.getName()).log(Level.SEVERE, null, ex);
       }
   }
@@ -763,7 +763,7 @@ public class ViewUserInfo extends RubisHttpServlet
 
             storeSignatures(cert);
             
-            storeBranches(new Timestamp(cert[0].getTimestamp()), users, 0);
+            storeLeafHashes(new Timestamp(cert[0].getTimestamp()), users, 0, null);
             
             usersStmt.close();
 
@@ -786,7 +786,7 @@ public class ViewUserInfo extends RubisHttpServlet
             cache.executeUpdate();
             cache.close();
 
-            storeBranches(new Timestamp(cert[0].getTimestamp()), comments, 1);
+            storeLeafHashes(new Timestamp(cert[0].getTimestamp()), comments, 1, null);
 
             while (comments != null && comments.next()) {
                 //store in cache

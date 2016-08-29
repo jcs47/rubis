@@ -210,13 +210,13 @@ public class ServletPrinter
   // Region related printed functions //
   //////////////////////////////////////
 
-  void printRegion(String regionName)
+  void printRegion(int regionId, String regionName)
   {
     try
     {
       out.println(
         "<a href=\"edu.rice.rubis.servlets.BrowseCategories?region="
-          + URLEncoder.encode(regionName)
+          + regionId
           + "\">"
           + regionName
           + "</a><br />");

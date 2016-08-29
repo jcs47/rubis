@@ -48,21 +48,21 @@ public class ViewItem extends RubisHttpServlet
           Statement s = getRepository().createStatement();
           s.executeUpdate("DROP TABLE items" + id);
           s.close();
-      } catch (SQLException ex) {
+      } catch (Exception ex) {
           //Logger.getLogger(BrowseCategories.class.getName()).log(Level.SEVERE, null, ex);
       }
       try {
           Statement s = getRepository().createStatement();
           s.executeUpdate("DROP TABLE leafHashes" + id);
           s.close();
-      } catch (SQLException ex) {
+      } catch (Exception ex) {
           //Logger.getLogger(BrowseCategories.class.getName()).log(Level.SEVERE, null, ex);
       }
       try {
           Statement s = getRepository().createStatement();
           s.executeUpdate("DROP TABLE signatures" + id);
           s.close();
-      } catch (SQLException ex) {
+      } catch (Exception ex) {
           //Logger.getLogger(BrowseCategories.class.getName()).log(Level.SEVERE, null, ex);
       }
   }
@@ -499,7 +499,7 @@ public class ViewItem extends RubisHttpServlet
         TreeCertificate[] cert  = ((BFTPreparedStatement) stmt).getCertificates(); 
 
         storeSignatures(cert);
-        storeBranches(new Timestamp(cert[0].getTimestamp()), rs, 0);
+        storeLeafHashes(new Timestamp(cert[0].getTimestamp()), rs, 0, null);
         
         //PreparedStatement sellerStmt = null;
         try

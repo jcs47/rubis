@@ -44,21 +44,21 @@ public class BrowseRegions extends RubisHttpServlet
           Statement s = getRepository().createStatement();
           s.executeUpdate("DROP TABLE regions" + id);
           s.close();
-      } catch (SQLException ex) {
+      } catch (Exception ex) {
           //Logger.getLogger(BrowseCategories.class.getName()).log(Level.SEVERE, null, ex);
       }
       try {
           Statement s = getRepository().createStatement();
           s.executeUpdate("DROP TABLE leafHashes" + id);
           s.close();
-      } catch (SQLException ex) {
+      } catch (Exception ex) {
           //Logger.getLogger(BrowseCategories.class.getName()).log(Level.SEVERE, null, ex);
       }
       try {
           Statement s = getRepository().createStatement();
           s.executeUpdate("DROP TABLE signatures" + id);
           s.close();
-      } catch (SQLException ex) {
+      } catch (Exception ex) {
           //Logger.getLogger(BrowseCategories.class.getName()).log(Level.SEVERE, null, ex);
       }
   }
@@ -197,19 +197,20 @@ public class BrowseRegions extends RubisHttpServlet
       rs.next();
 
       int total = rs.getInt("total");
+      
+      stmt.close();
+      rs.close();
+      
       if (total == 0 /*&& !Arrays.equals(b, rs.getBytes("value"))*/) {
           s.close();
           regions.close();
-          stmt.close();
-          rs.close();
           sp.printHTML("<p>Leaf hash not found!</p>");
           
           //drop tables used in repository
           dropTables(id);
           return false;
       }
-      stmt.close();
-      rs.close();
+
       //sp.printHTML("<p>total number of leaf hashes: " + total + "</p>");
      }
      s.close();
@@ -312,7 +313,6 @@ public class BrowseRegions extends RubisHttpServlet
   {
     PreparedStatement stmt = null;
     Connection conn = null;
-    String regionName;
     ResultSet rs = null;
     
     String sql = "SELECT * FROM regions";
@@ -323,7 +323,7 @@ public class BrowseRegions extends RubisHttpServlet
     {
       conn = getConnection();
       
-      stmt = getCache().prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+      stmt = getCache().prepareStatement(sql + " ORDER BY position ASC", ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
       rs = stmt.executeQuery();
       
       if (verifyCache(rs, sp)) {
@@ -356,8 +356,9 @@ public class BrowseRegions extends RubisHttpServlet
 
       do
       {
-        regionName = rs.getString("name");
-        sp.printRegion(regionName);
+        String regionName = rs.getString("name");
+        int regionId = rs.getInt("id");
+        sp.printRegion(regionId, regionName);
       }
       while (rs.next());
       

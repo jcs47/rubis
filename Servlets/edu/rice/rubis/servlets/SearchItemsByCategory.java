@@ -54,21 +54,21 @@ public class SearchItemsByCategory extends RubisHttpServlet
           Statement s = getRepository().createStatement();
           s.executeUpdate("DROP TABLE items" + id);
           s.close();
-      } catch (SQLException ex) {
+      } catch (Exception ex) {
           //Logger.getLogger(BrowseCategories.class.getName()).log(Level.SEVERE, null, ex);
       }
       try {
           Statement s = getRepository().createStatement();
           s.executeUpdate("DROP TABLE leafHashes" + id);
           s.close();
-      } catch (SQLException ex) {
+      } catch (Exception ex) {
           //Logger.getLogger(BrowseCategories.class.getName()).log(Level.SEVERE, null, ex);
       }
       try {
           Statement s = getRepository().createStatement();
           s.executeUpdate("DROP TABLE signatures" + id);
           s.close();
-      } catch (SQLException ex) {
+      } catch (Exception ex) {
           //Logger.getLogger(BrowseCategories.class.getName()).log(Level.SEVERE, null, ex);
       }
   }
@@ -409,14 +409,14 @@ public class SearchItemsByCategory extends RubisHttpServlet
     try
     {
         
-      int first = page * nbOfItems;
-      int last = first + nbOfItems;
+      //int first = page * nbOfItems;
+      //int last = first + nbOfItems;
       
         
-      stmt = getRepository().prepareStatement("SELECT COUNT(*) AS total FROM items_aux WHERE category = ? AND region = -1 AND first_item >= ? AND last_item <= ?");
+      stmt = getRepository().prepareStatement("SELECT COUNT(*) AS total FROM items_aux WHERE category = ? AND region = -1 AND page = ? AND nbOfItems = ?");
       stmt.setInt(1, categoryId.intValue());
-      stmt.setInt(2, first);
-      stmt.setInt(3, last);
+      stmt.setInt(2, page);
+      stmt.setInt(3, nbOfItems);
       
       rs = stmt.executeQuery();
       rs.next();
@@ -427,16 +427,25 @@ public class SearchItemsByCategory extends RubisHttpServlet
       rs.close();
       stmt.close();
             
-      if (total > 0) {                    
-          stmt = getCache().prepareStatement("SELECT * FROM items WHERE category= ? AND end_date>= ? ORDER BY end_date ASC { LIMIT ? OFFSET ? }",
-                  ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
-
-          Timestamp ts = new Timestamp(System.currentTimeMillis());
-      
+      if (total > 0) {
+          
+          stmt = getRepository().prepareStatement("SELECT timestamp FROM items_aux WHERE category = ? AND region = -1 AND page = ? AND nbOfItems = ?");
           stmt.setInt(1, categoryId.intValue());
-          stmt.setTimestamp(2, ts);
+          stmt.setInt(2, page);
           stmt.setInt(3, nbOfItems);
-          stmt.setInt(4, page * nbOfItems);
+      
+          rs = stmt.executeQuery();
+          rs.next();
+          
+          Timestamp ts = rs.getTimestamp("timestamp");
+                    
+          rs.close();
+          stmt.close();
+          
+          stmt = getCache().prepareStatement("SELECT * FROM items WHERE timestamp = ? ORDER BY position ASC",
+                  ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+          stmt.setTimestamp(1, ts);
+          
           rs = stmt.executeQuery();
       
           fromCache = verifyCache(rs, sp);
@@ -445,6 +454,9 @@ public class SearchItemsByCategory extends RubisHttpServlet
       
       if (!fromCache) {
       
+        rs.close();
+        stmt.close();
+          
         sp.printHTML("Fetching data from database...");
       
         conn = getConnection();
@@ -471,13 +483,15 @@ public class SearchItemsByCategory extends RubisHttpServlet
                // get certificates
                TreeCertificate[] cert  = ((BFTPreparedStatement) stmt).getCertificates(); 
 
+               ts = new Timestamp(cert[0].getTimestamp());
+               
                storeSignatures(cert);
-               storeBranches(new Timestamp(cert[0].getTimestamp()), rs, 0);
+               storeLeafHashes(ts, rs, 0, null);
 
                PreparedStatement cache = getRepository().prepareStatement("INSERT INTO items_aux VALUES(?,?,?,?,?)");
 
-               cache.setInt(1, first);
-               cache.setInt(2, last);
+               cache.setInt(1, page);
+               cache.setInt(2, nbOfItems);
                cache.setInt(3, categoryId.intValue());
                cache.setInt(4, -1);
                cache.setTimestamp(5, ts);
@@ -514,7 +528,7 @@ public class SearchItemsByCategory extends RubisHttpServlet
                   cache = getCache().prepareStatement(sql);
                   cache.setTimestamp(1, rs.getTimestamp("start_date"));
                   cache.setTimestamp(2, rs.getTimestamp("end_date"));
-                  cache.setTimestamp(3, new Timestamp(cert[0].getTimestamp()));
+                  cache.setTimestamp(3, ts);
 
                   cache.executeUpdate();
                   cache.close();

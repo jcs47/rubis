@@ -46,21 +46,21 @@ public class BrowseCategories extends RubisHttpServlet
           Statement s = getRepository().createStatement();
           s.executeUpdate("DROP TABLE categories" + id);
           s.close();
-      } catch (SQLException ex) {
+      } catch (Exception ex) {
           //Logger.getLogger(BrowseCategories.class.getName()).log(Level.SEVERE, null, ex);
       }
       try {
           Statement s = getRepository().createStatement();
           s.executeUpdate("DROP TABLE leafHashes" + id);
           s.close();
-      } catch (SQLException ex) {
+      } catch (Exception ex) {
           //Logger.getLogger(BrowseCategories.class.getName()).log(Level.SEVERE, null, ex);
       }
       try {
           Statement s = getRepository().createStatement();
           s.executeUpdate("DROP TABLE signatures" + id);
           s.close();
-      } catch (SQLException ex) {
+      } catch (Exception ex) {
           //Logger.getLogger(BrowseCategories.class.getName()).log(Level.SEVERE, null, ex);
       }
   }
@@ -199,19 +199,21 @@ public class BrowseCategories extends RubisHttpServlet
       rs.next();
 
       int total = rs.getInt("total");
+      
+      stmt.close();
+      rs.close();
+      
       if (total == 0 /*&& !Arrays.equals(b, rs.getBytes("value"))*/) {
           s.close();
           categories.close();
-          stmt.close();
-          rs.close();
+
           sp.printHTML("<p>Leaf hash not found!</p>");
           
           //drop tables used in repository
           dropTables(id);
           return false;
       }
-      stmt.close();
-      rs.close();
+
       //sp.printHTML("<p>total number of leaf hashes: " + total + "</p>");
      }
      s.close();
@@ -322,7 +324,7 @@ public class BrowseCategories extends RubisHttpServlet
     try
     {        
       
-      stmt = getCache().prepareStatement(sql, ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+      stmt = getCache().prepareStatement(sql + " ORDER BY position ASC", ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
       rs = stmt.executeQuery();
       
       if (verifyCache(rs, sp)) {
@@ -418,7 +420,8 @@ public class BrowseCategories extends RubisHttpServlet
 
     String value = request.getParameter("region");
     if ((value != null) && (!value.equals("")))
-    {
+        regionId = Integer.parseInt(value);
+    /*{
       // get the region ID
       try
       {
@@ -443,7 +446,7 @@ public class BrowseCategories extends RubisHttpServlet
         closeConnection(stmt, conn);
         return;
       }
-    }
+    }*/
     
     boolean connAlive = categoryList(regionId, userId, stmt, conn, sp);
     if (connAlive) {
