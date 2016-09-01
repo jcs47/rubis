@@ -430,7 +430,7 @@ public abstract class RubisHttpServlet extends HttpServlet
           //create relational repository to keep signatures, certificates and auxiliar info
           Class.forName("org.apache.derby.jdbc.EmbeddedDriver");
           repository = DriverManager.getConnection("jdbc:derby:memory:myCache;create=true");
-
+          repository.setAutoCommit(true);
           
           // fetch connection with main database
           Connection db = DriverManager.getConnection(

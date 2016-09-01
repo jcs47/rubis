@@ -111,6 +111,8 @@ public class ViewUserInfo extends RubisHttpServlet
             
      //copy categories, signatures and leafs to local repository
      // this will make verification easier
+      
+     getRepository().setAutoCommit(false);
      
      // tables...
      
@@ -218,6 +220,8 @@ public class ViewUserInfo extends RubisHttpServlet
      
      cachedComments.beforeFirst();
      
+     getCache().setAutoCommit(false);
+     
      stmt = getCache().prepareStatement("SELECT * from signatures WHERE timestamp = ?", ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
      stmt.setTimestamp(1, ts);
      ResultSet rs = stmt.executeQuery();
@@ -260,6 +264,9 @@ public class ViewUserInfo extends RubisHttpServlet
      }
      stmt.close();
      rs.close();
+     
+     getCache().commit();
+     getCache().setAutoCommit(true);
      
      // Fetch categories
      //sp.printHTML("<p>Fetch categories...</p>");
@@ -317,6 +324,8 @@ public class ViewUserInfo extends RubisHttpServlet
           
           //drop tables used in repository
           dropTables(id);
+          getRepository().commit();
+          getRepository().setAutoCommit(true);
           return false;
       }
 
@@ -383,6 +392,8 @@ public class ViewUserInfo extends RubisHttpServlet
           
           //drop tables used in repository
           dropTables(id);
+          getRepository().commit();
+          getRepository().setAutoCommit(true);
           return false;
       }
 
@@ -504,14 +515,20 @@ public class ViewUserInfo extends RubisHttpServlet
      
      //drop tables used in repository
      dropTables(id);
+     getRepository().commit();
+     getRepository().setAutoCommit(true);
           
      return count > 2*RubisHttpServlet.F;
       
     } catch (Exception ex) {
+        printError("Error while verifying cache.", sp);
         printException(ex, sp);
         try {
             dropTables(id);
+            getRepository().commit();
+            getRepository().setAutoCommit(true);
         } catch (Exception ex1) {
+            printError("Error while dropping cache auxiliar tables.", sp);
             printException(ex, sp);
         }
         return false;    

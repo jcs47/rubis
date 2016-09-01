@@ -87,6 +87,8 @@ public class BrowseCategories extends RubisHttpServlet
      //copy categories, signatures and leafs to local repository
      // this will make verification easier
      
+     getRepository().setAutoCommit(false);
+          
      // tables...
      
      //drop tables used in repository
@@ -123,6 +125,8 @@ public class BrowseCategories extends RubisHttpServlet
       stmt.close();
 
      }
+     
+     getCache().setAutoCommit(false);
      
      stmt = getCache().prepareStatement("SELECT * from signatures WHERE timestamp = ?", ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
      stmt.setTimestamp(1, ts);
@@ -166,6 +170,9 @@ public class BrowseCategories extends RubisHttpServlet
      }
      stmt.close();
      rs.close();
+     
+     getCache().commit();
+     getCache().setAutoCommit(true);
      
      // Fetch categories
      //sp.printHTML("<p>Fetch categories...</p>");
@@ -211,6 +218,8 @@ public class BrowseCategories extends RubisHttpServlet
           
           //drop tables used in repository
           dropTables(id);
+          getRepository().commit();
+          getRepository().setAutoCommit(true);
           return false;
       }
 
@@ -293,14 +302,20 @@ public class BrowseCategories extends RubisHttpServlet
      
      //drop tables used in repository
      dropTables(id);
+     getRepository().commit();
+     getRepository().setAutoCommit(true);
           
      return count > 2*RubisHttpServlet.F;
       
     } catch (Exception ex) {
+        printError("Error while verifying cache.", sp);
         printException(ex, sp);
         try {
             dropTables(id);
+            getRepository().commit();
+            getRepository().setAutoCommit(true);
         } catch (Exception ex1) {
+            printError("Error while dropping cache auxiliar tables.", sp);
             printException(ex, sp);
         }
         
@@ -420,12 +435,12 @@ public class BrowseCategories extends RubisHttpServlet
 
     String value = request.getParameter("region");
     if ((value != null) && (!value.equals("")))
-        regionId = Integer.parseInt(value);
-    /*{
+        //regionId = Integer.parseInt(value);
+    {
       // get the region ID
       try
       {
-        stmt = conn.prepareStatement("SELECT id FROM regions WHERE name=?", ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+        stmt = getCache().prepareStatement("SELECT id FROM regions WHERE name=?", ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
         stmt.setString(1, value);
         ResultSet rs = stmt.executeQuery();
         if (!rs.first())
@@ -446,7 +461,7 @@ public class BrowseCategories extends RubisHttpServlet
         closeConnection(stmt, conn);
         return;
       }
-    }*/
+    }
     
     boolean connAlive = categoryList(regionId, userId, stmt, conn, sp);
     if (connAlive) {

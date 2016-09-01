@@ -88,6 +88,8 @@ public class ViewItem extends RubisHttpServlet
             
      //copy categories, signatures and leafs to local repository
      // this will make verification easier
+      
+     getRepository().setAutoCommit(false);
      
      // tables...
      
@@ -166,6 +168,8 @@ public class ViewItem extends RubisHttpServlet
      
      cachedRS.beforeFirst();
      
+     getCache().setAutoCommit(false);
+     
      stmt = getCache().prepareStatement("SELECT * from signatures WHERE timestamp = ?", ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
      stmt.setTimestamp(1, ts);
      ResultSet rs = stmt.executeQuery();
@@ -208,6 +212,9 @@ public class ViewItem extends RubisHttpServlet
      }
      stmt.close();
      rs.close();
+     
+     getCache().commit();
+     getCache().setAutoCommit(true);
      
      // Fetch categories
      //sp.printHTML("<p>Fetch categories...</p>");
@@ -276,6 +283,8 @@ public class ViewItem extends RubisHttpServlet
           
           //drop tables used in repository
           dropTables(id);
+          getRepository().commit();
+          getRepository().setAutoCommit(true);
           return false;
       }
 
@@ -365,6 +374,8 @@ public class ViewItem extends RubisHttpServlet
      
      //drop tables used in repository
      dropTables(id);
+     getRepository().commit();
+     getRepository().setAutoCommit(true);
           
      return count > 2*RubisHttpServlet.F;
       
@@ -372,8 +383,12 @@ public class ViewItem extends RubisHttpServlet
         printException(ex, sp);
         
         try {
+            printError("Error while verifying cache.", sp);
             dropTables(id);
+            getRepository().commit();
+            getRepository().setAutoCommit(true);
         } catch (Exception ex1) {
+            printError("Error while dropping cache auxiliar tables.", sp);
             printException(ex, sp);
         }
         return false;    
@@ -420,7 +435,7 @@ public class ViewItem extends RubisHttpServlet
           sp.printHTML("Fetching from database");
           
           conn = getConnection();
-          stmt = conn.prepareStatement("SELECT items.name, items.id, items.description, items.initial_price, items.quantity, items.reserve_price, items.buy_now, items.nb_of_bids, items.max_bid, items.start_date, items.end_date, items.seller, items.category, users.nickname, users.region FROM items,users WHERE items.seller=users.id AND id= ?",
+          stmt = conn.prepareStatement("SELECT items.name, items.id, items.description, items.initial_price, items.quantity, items.reserve_price, items.buy_now, items.nb_of_bids, items.max_bid, items.start_date, items.end_date, items.seller, items.category, users.nickname, users.region FROM items,users WHERE items.seller=users.id AND items.id= ?",
 		ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
           stmt.setInt(1, itemId.intValue());
           rs = stmt.executeQuery();
@@ -524,6 +539,7 @@ public class ViewItem extends RubisHttpServlet
           //store in cache
             
           getCache().setAutoCommit(false);
+          getRepository().setAutoCommit(true);
           
           eraseFromCache("items", "id", rs.getInt("id"), "items_aux");
           

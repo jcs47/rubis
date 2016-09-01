@@ -216,7 +216,7 @@ public class ServletPrinter
     {
       out.println(
         "<a href=\"edu.rice.rubis.servlets.BrowseCategories?region="
-          + regionId
+          + URLEncoder.encode(regionName)
           + "\">"
           + regionName
           + "</a><br />");
